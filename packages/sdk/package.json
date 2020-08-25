@@ -1,0 +1,20 @@
+{
+	"name": "@fleetfn/sdk",
+	"version": "1.0.0-alpha.1",
+	"author": "Fleet FN, Inc",
+	"main": "lib/index.js",
+	"license": "MIT",
+	"scripts": {
+		"build": "babel src -d lib",
+		"prepublishOnly": "yarn build"
+	},
+	"dependencies": {
+		"chalk": "^2.4.2",
+		"node-fetch": "^2.3.0"
+	},
+	"devDependencies": {
+		"@babel/cli": "^7.10.5",
+		"@babel/core": "^7.11.4",
+		"@babel/preset-env": "^7.11.0"
+	}
+}

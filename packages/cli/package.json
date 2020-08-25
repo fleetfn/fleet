@@ -1,0 +1,44 @@
+{
+	"name": "@fleetfn/cli",
+	"version": "1.0.0-beta.1",
+	"preferGlobal": true,
+	"author": "Fleet FN, Inc",
+	"license": "Apache-2.0",
+	"description": "The command-line interface for Fleet.",
+	"scripts": {
+		"build": "node ./scripts/build.js",
+		"prepublishOnly": "yarn build"
+	},
+	"bin": {
+		"fleet": "bin/fleet.js"
+	},
+	"files": [
+		"dist",
+		"bin"
+	],
+	"devDependencies": {
+		"@fleetfn/sdk": "^1.0.0-alpha.1",
+		"adm-zip": "^0.4.16",
+		"ansi-escapes": "^4.3.1",
+		"ora": "^4.0.4",
+		"chalk": "^2.4.2",
+		"commander": "^4.1.1",
+		"console": "^0.7.2",
+		"encoding": "^0.1.12",
+		"json-parse-better-errors": "^1.0.2",
+		"load-json-file": "3.0.0",
+		"ms": "^2.1.1",
+		"node-fetch": "^2.3.0",
+		"progress": "^2.0.3",
+		"prompts": "^2.3.0",
+		"webpack-merge": "^4.2.2",
+		"write-json-file": "^4.2.1"
+	},
+	"dependencies": {
+		"fs-extra": "^9.0.0",
+		"simple-git": "^2.2.0",
+		"terser-webpack-plugin": "^2.3.5",
+		"webpack": "^4.41.6",
+		"xdg-app-paths": "^5.2.0"
+	}
+}

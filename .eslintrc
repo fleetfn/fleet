@@ -1,0 +1,19 @@
+{
+    "parserOptions": {
+        "ecmaVersion": 2018,
+        "sourceType": "module",
+        "modules": true
+    },
+    "extends": [
+        "eslint:recommended",
+        "prettier"
+    ],
+    "env": {
+        "node": true,
+        "es6": true
+    },
+    "rules": {
+        "quotes": ["error", "single"],
+        "no-async-promise-executor": 0
+    }
+}

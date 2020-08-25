@@ -1,0 +1,22 @@
+{
+	"name": "fleet",
+	"private": true,
+	"author": "Fleet FN, Inc",
+	"workspaces": [
+		"packages/*"
+	],
+	"scripts": {
+		"lint": "eslint . --ext .js",
+		"format": "prettier --write -- \"**/*.js\"",
+		"format:check": "prettier --list-different -- \"**/*.js}\""
+	},
+	"engines": {
+		"node": "10.x.x",
+		"yarn": "1.x"
+	},
+	"devDependencies": {
+		"eslint": "^7.7.0",
+		"eslint-config-prettier": "^6.11.0",
+		"prettier": "^2.1.0"
+	}
+}
