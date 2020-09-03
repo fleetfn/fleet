@@ -9,7 +9,7 @@ import {build} from './build';
 import {cmd, createLogger} from '../../shared/logger';
 import {getLinkedProject, linkFolderToProject} from './link';
 import {readAuthConfigFile} from '../../shared/config';
-import {readLocalConfig} from './files';
+import {getLocalConfig} from './files';
 import humanizePath from '../../shared/humanize-path';
 import stamp from './stamp';
 
@@ -46,11 +46,11 @@ export default async (argv) => {
 
   const path = process.cwd();
   const git = simpleGit();
-  const localConfig = readLocalConfig(logger, path);
+  const localConfig = getLocalConfig(logger, path);
 
   if (!localConfig) {
     warn(
-      `Your project is missing a ${chalk.bold('fleet.json')} file.`,
+      `Your project is missing a ${chalk.bold('fleet.yml')} file.`,
       'configuration.html'
     );
     return 1;
@@ -68,7 +68,7 @@ export default async (argv) => {
       warn(
         `Your project is missing the ${chalk.yellow.blue(
           'functions'
-        )} property in the ${chalk.bold('fleet.json')} file.`,
+        )} property in the ${chalk.bold('fleet.yml')} file.`,
         'configuration.html'
       );
       return 1;
