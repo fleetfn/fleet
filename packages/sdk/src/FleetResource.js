@@ -1,4 +1,4 @@
-import {Action} from '../objects/Action';
+import {Action} from './objects/Action';
 
 export class FleetResource {
   constructor(client) {
