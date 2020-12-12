@@ -7,8 +7,8 @@ export class Fleet {
     this.token = token;
     this.url = url;
 
-    this.deployment = new Deployment(this.request);
-    this.project = new Project(this.request);
+    this.deployment = new Deployment(this.request.bind(this));
+    this.project = new Project(this.request.bind(this));
   }
 
   request(uri, body, opts = {}) {

@@ -4,21 +4,21 @@ export class Project extends FleetResource {
   path = 'project';
 
   project(projectId) {
-    return {
+    return this.createMethod({
       json: false,
       method: 'GET',
       path: '',
       variables: {
         projectId,
       },
-    };
+    });
   }
 
   all() {
-    return {
+    return this.createMethod({
       json: false,
       method: 'GET',
       path: 'all',
-    };
+    });
   }
 }
