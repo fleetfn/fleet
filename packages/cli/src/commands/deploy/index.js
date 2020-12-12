@@ -125,7 +125,7 @@ export default async (argv) => {
             name: project.name,
           },
         })),
-        initial: 1,
+        initial: 0,
       });
 
       if (!project.value) {
