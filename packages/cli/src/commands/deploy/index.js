@@ -1,6 +1,5 @@
 import {Fleet, Objects} from '@fleetfn/sdk';
 import chalk from 'chalk';
-import fs from 'fs';
 import program from 'commander';
 import prompts from 'prompts';
 import simpleGit from 'simple-git/promise';
