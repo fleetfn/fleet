@@ -30,8 +30,8 @@ export class Environment extends Action {
         const newFunc = {...func};
 
         /// Only add the latest git commit if the repo supports git
-        if (commitHead) {
-          newFunc.gitCommitLatest = commitHead;
+        if (commit_head) {
+          newFunc.gitCommitLatest = commit_head;
         }
 
         const handler = func.handler.startsWith('./')
