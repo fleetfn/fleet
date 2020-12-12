@@ -3,8 +3,8 @@ import {Deployment} from './resources/Deployment';
 import {Project} from './resources/Project';
 
 export class Fleet {
-  constructor({apiKey, url = 'https://api.runfleet.io/v1/api/'}) {
-    this.apiKey = apiKey;
+  constructor({token, url = 'https://api.runfleet.io/v1/api/'}) {
+    this.token = token;
     this.url = url;
 
     this.deployment = new Deployment(this.request);
@@ -16,7 +16,9 @@ export class Fleet {
       ...opts,
       apiUrl: this.url + uri,
       body,
-      token: this.apiKey,
+      token: this.token,
     });
   }
 }
+
+export * as Objects from './objects';

@@ -1,4 +1,4 @@
-import {Fleet} from '@fleetfn/sdk';
+import {Fleet, Objects} from '@fleetfn/sdk';
 import chalk from 'chalk';
 import fs from 'fs';
 import program from 'commander';
@@ -12,6 +12,8 @@ import {readAuthConfigFile} from '../../shared/config';
 import {getLocalConfig} from './files';
 import humanizePath from '../../shared/humanize-path';
 import stamp from './stamp';
+
+const {Environment, File} = Objects;
 
 const READY = 'READY';
 
@@ -94,7 +96,7 @@ export default async (argv) => {
       return 1;
     }
 
-    const client = new Fleet({apiKey: AUTH_CONFIG.token});
+    const fleet = new Fleet({token: AUTH_CONFIG.token});
 
     // Folder not linked to the project
     if (!link) {
@@ -110,7 +112,7 @@ export default async (argv) => {
         return 1;
       }
 
-      const {projects} = await client.project.all();
+      const {projects} = await fleet.project.all();
 
       const project = await prompts({
         type: 'select',
@@ -155,46 +157,31 @@ export default async (argv) => {
     const deployTime = stamp();
 
     try {
-      let commitHead;
+      let commit_head;
 
       try {
-        commitHead = transformGitHead(await (await git.log()).latest);
+        commit_head = transformGitHead(await (await git.log()).latest);
       } catch (error) {
         // Hide the error assuming the repository has no git
       }
 
+      const environment = new Environment({
+        commit_head,
+        environment_variables: localConfig.env,
+        project_id: link.projectId,
+        regions: localConfig.regions,
+        resources: localConfig.functions,
+        stage: isProd ? 'prod' : 'dev',
+      });
+
       const {
-        deployUid,
         domain,
         error: errorMessage,
         functionDomain,
         functions,
         message,
         name,
-      } = await client.deploy.create({
-        // Normalizes the handler extensions, once the build is done locally
-        // we need to normalize to `.js` when file is ts.
-        functions: localConfig.functions.map((func) => {
-          const newFunc = {...func};
-
-          /// Only add the latest git commit if the repo supports git
-          if (commitHead) {
-            newFunc.gitCommitLatest = commitHead;
-          }
-
-          const handler = func.handler.startsWith('./')
-            ? func.handler
-            : `./${func.handler}`;
-
-          return {
-            ...newFunc,
-            handler: handler.replace('.ts', '.js'),
-          };
-        }),
-        prod: isProd,
-        projectId: link.projectId,
-        regions: localConfig.regions,
-      });
+      } = await fleet.deployment.create(environment);
 
       log(
         `Deploying ${chalk.bold(
@@ -208,42 +195,31 @@ export default async (argv) => {
 
       log(`${chalk.cyan.bold(`https://${functionDomain}`)}`);
 
-      const deployments = await client.deploy.files(
-        functions.map((func) => {
-          debug(
-            `Deploying the ${func.handler} function of path ${
-              bundle.functions[func.handler]
-            }`
-          );
+      functions.forEach(({_id, handler}) => {
+        const path = bundle.functions[handler];
 
-          return {
-            data: fs.createReadStream(bundle.functions[func.handler]),
-            handler: func.handler,
-            functionId: func._id,
-          };
-        })
+        debug(`Deploying the ${handler} function of path ${path}`);
+
+        environment.files.push(new File({path, handler, id: _id}));
+      });
+
+      const deployments = await fleet.deployment.deploy(environment);
+
+      const failedDeployments = deployments.filter(
+        (deploy) => deploy.code !== READY
       );
-
-      const deployFail = deployments.filter((deploy) => deploy.code !== READY);
 
       // Checks if any deployment has initialized or error, if it is positive,
       // avoid giving a validate and the deployment must be created again.
-      if (deployFail.length > 0) {
+      if (failedDeployments.length > 0) {
         log(
           `Fail! Unable to deploy ${chalk.bold(
-            deployFail.length
+            failedDeployments.length
           )} functions. Try again! ${chalk.gray.bold(deployTime())}`
         );
         return 1;
       } else {
-        // Validates the deployment, updating the deploy point and other details.
-        const {deployPoint} = await client.deploy.validate({
-          deployUid,
-          env: localConfig.env,
-          prod: isProd,
-          projectId: link.projectId,
-          regions: localConfig.regions,
-        });
+        const {deployPoint} = await fleet.deployment.commit(environment);
 
         if (deployPoint && isProd) {
           log(
