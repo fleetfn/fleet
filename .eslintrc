@@ -1,8 +1,15 @@
 {
+    "parser": "@babel/eslint-parser",
     "parserOptions": {
         "ecmaVersion": 2018,
+        "modules": true,
+        "requireConfigFile": false,
         "sourceType": "module",
-        "modules": true
+        "babelOptions": {
+            "plugins": [
+                "@babel/plugin-proposal-class-properties"
+            ]
+        }
     },
     "extends": [
         "eslint:recommended",
