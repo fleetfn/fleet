@@ -2,8 +2,10 @@ import fs from 'fs';
 
 import {Action} from './Action';
 
-class File extends Action {
+export class File extends Action {
   constructor({path, handler, id}) {
+    super();
+
     this.data = fs.createReadStream(path);
     this.handler = handler;
     this.id = id;
