@@ -1,0 +1,10 @@
+{
+    "name": "@fleetfn/types",
+    "description": "TypeScript definitions for Fleet",
+    "version": "1.0.0-alpha.1",
+    "author": "Fleet FN, Inc",
+    "main": "",
+    "types": "index.d.ts",
+    "license": "MIT",
+    "typeScriptVersion": "3.2"
+}
