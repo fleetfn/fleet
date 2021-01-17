@@ -59,16 +59,19 @@ function getConfigYaml(error, path) {
 
 export function getLocalConfig({error}, prefix) {
   const path = getConfigPath(prefix);
+
+  if (!path) {
+    return null;
+  }
+
   const ext = extname(path);
 
-  if (path) {
-    switch (ext) {
-      case '.json':
-        return getConfigJson(error, path);
-      case '.yml':
-        return getConfigYaml(error, path);
-      default:
-        return null;
-    }
+  switch (ext) {
+    case '.json':
+      return getConfigJson(error, path);
+    case '.yml':
+      return getConfigYaml(error, path);
+    default:
+      return null;
   }
 }
