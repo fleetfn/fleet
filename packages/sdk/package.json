@@ -1,6 +1,6 @@
 {
 	"name": "@fleetfn/sdk",
-	"version": "1.0.0-alpha.1",
+	"version": "1.0.0-alpha.2",
 	"author": "Fleet FN, Inc",
 	"main": "lib/index.js",
 	"license": "MIT",
