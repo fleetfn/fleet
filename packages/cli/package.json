@@ -1,6 +1,6 @@
 {
 	"name": "@fleetfn/cli",
-	"version": "1.0.0-beta.2",
+	"version": "1.0.0-beta.3",
 	"preferGlobal": true,
 	"author": "Fleet FN, Inc",
 	"license": "Apache-2.0",
@@ -17,7 +17,7 @@
 		"bin"
 	],
 	"devDependencies": {
-		"@fleetfn/sdk": "^1.0.0-alpha.1",
+		"@fleetfn/sdk": "^1.0.0-alpha.2",
 		"adm-zip": "^0.4.16",
 		"ansi-escapes": "^4.3.1",
 		"chalk": "^2.4.2",
