@@ -13,9 +13,9 @@
 		"node-fetch": "^2.6.1"
 	},
 	"devDependencies": {
-		"@babel/cli": "^7.10.5",
-		"@babel/core": "^7.11.4",
-		"@babel/plugin-proposal-class-properties": "^7.12.1",
-		"@babel/preset-env": "^7.11.0"
+		"@babel/cli": "^7.13.14",
+		"@babel/core": "^7.13.14",
+		"@babel/plugin-proposal-class-properties": "^7.13.0",
+		"@babel/preset-env": "^7.13.12"
 	}
 }
