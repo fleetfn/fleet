@@ -48,7 +48,7 @@ export const build = (entryFiles = [], debug) => {
         ],
       },
       output: {
-        filename: '[name].js',
+        filename: '[name].[contenthash].js',
         libraryTarget: 'commonjs2',
         path: path.resolve(process.cwd(), 'dist'),
       },
@@ -68,19 +68,22 @@ export const build = (entryFiles = [], debug) => {
       }
 
       if (stats.hash !== lastHash) {
-        const assets = stats.compilation.assets;
-
         const jsonStats = stats.toJson('minimal');
         const bundle = {
           functions: {},
           errors: jsonStats.errors,
         };
-        const jsAssets = Object.keys(assets).filter(filterByExtension('js'));
+        const jsAssets = Object.keys(stats.compilation.assets).filter(
+          filterByExtension('js')
+        );
 
         jsAssets.forEach((assetKey) => {
-          debug(`Build ${assetKey} in ${assets[assetKey].existsAt}.`);
+          const asset = stats.compilation.assetsInfo.get(assetKey);
+          const handler = assetKey.replace(`.${asset.contenthash}`, '');
 
-          bundle.functions[assetKey] = assets[assetKey].existsAt;
+          debug(`Build ${handler} (${assetKey}) in ${config.output.path}.`);
+
+          bundle.functions[handler] = path.join(config.output.path, assetKey);
         });
 
         resolve(bundle);
@@ -88,6 +91,15 @@ export const build = (entryFiles = [], debug) => {
       lastHash = stats.hash;
     };
 
-    compiler.run(compilerCallback);
+    compiler.run((err, stats) => {
+      compiler.close((closeErr) => {
+        if (closeErr) {
+          reject(closeErr);
+          return;
+        }
+
+        compilerCallback(err, stats);
+      });
+    });
   });
 };
