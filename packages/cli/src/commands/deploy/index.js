@@ -147,7 +147,7 @@ export default async (argv) => {
     const bundle = await build(entryFiles, debug);
 
     if (bundle.errors.length > 0) {
-      error(bundle.errors, null);
+      bundle.errors.forEach(({message}) => error(message, null));
       return 1;
     }
 
