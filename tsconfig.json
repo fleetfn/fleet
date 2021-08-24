@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "declaration": true,
+    "module": "commonjs",
+    "target": "es2019",
+    "removeComments": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "lib": [
+			"es2019",
+			"es2018.promise",
+			"esnext.asynciterable"
+		],
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+  },
+  "exclude": [
+    "node_modules",
+    "**/__tests__/**"
+  ]
+}

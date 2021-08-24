@@ -14,6 +14,18 @@ const config = {
       }),
     ],
   },
+  module: {
+    rules: [
+      {
+        test: /\.ts?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
+      },
+    ],
+  },
+  resolve: {
+    extensions: ['.ts', '.js'],
+  },
   externals: ['webpack', 'terser-webpack-plugin', 'xdg-app-paths'],
   output: {
     filename: 'fleet.js',

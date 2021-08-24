@@ -6,6 +6,12 @@
 	"license": "Apache-2.0",
 	"description": "The command-line interface for Fleet.",
 	"scripts": {
+		"test": "jest",
+		"lint-eslint": "eslint . --ext .ts",
+		"lint-typescript": "tsc --noEmit --declaration",
+		"lint": "yarn lint-eslint && yarn lint-typescript",
+		"format": "prettier --write -- \"**/*.ts\"",
+		"format:check": "prettier --list-different -- \"**/*.ts\"",
 		"build": "node ./scripts/build.js",
 		"prepublishOnly": "yarn build"
 	},
@@ -31,6 +37,7 @@
 		"ora": "^4.0.4",
 		"progress": "^2.0.3",
 		"prompts": "^2.3.0",
+		"ts-loader": "^9.2.5",
 		"webpack-merge": "^5.7.3",
 		"write-json-file": "^4.2.1",
 		"yaml": "^1.10.0"
@@ -38,6 +45,7 @@
 	"dependencies": {
 		"fs-extra": "^9.0.0",
 		"simple-git": "^2.2.0",
+		"update-notifier": "^5.1.0",
 		"webpack": "^5.28.0",
 		"xdg-app-paths": "^5.2.0"
 	}
