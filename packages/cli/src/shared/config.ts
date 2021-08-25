@@ -1,10 +1,14 @@
+/**
+ * Copyright (c) 2021-present Fleet FN, Inc. All rights reserved.
+ */
+
 import loadJSON from 'load-json-file';
+import report from '../reporter';
 import writeJSON from 'write-json-file';
 
-import {error, highlight} from './logger';
 import {getFleetDir} from './fleet-dir';
 
-function joinPath(...segments) {
+function joinPath(...segments: Array<string>) {
   const joinedPath = segments.join('/');
   return joinedPath.replace(/\/{2,}/g, '/');
 }
@@ -22,31 +26,29 @@ export const readAuthConfigFile = () => {
   return loadJSON.sync(AUTH_CONFIG_FILE_PATH);
 };
 
-export const writeToAuthConfigFile = (stuff) => {
+type Config = {
+  token: string;
+};
+
+export const writeToAuthConfigFile = (config: Config) => {
   try {
-    return writeJSON.sync(AUTH_CONFIG_FILE_PATH, stuff, {
+    return writeJSON.sync(AUTH_CONFIG_FILE_PATH, config, {
       indent: 2,
       mode: 0o600,
     });
-  } catch (err) {
+  } catch (err: any) {
     if (err.code === 'EPERM') {
-      console.error(
-        error(
-          `Not able to create ${highlight(
-            AUTH_CONFIG_FILE_PATH
-          )} (operation not permitted).`
-        )
+      report.panic(
+        `Not able to create ${report.highlight(
+          AUTH_CONFIG_FILE_PATH
+        )} (operation not permitted).`
       );
-      process.exit(1);
     } else if (err.code === 'EBADF') {
-      console.error(
-        error(
-          `Not able to create ${highlight(
-            AUTH_CONFIG_FILE_PATH
-          )} (bad file descriptor).`
-        )
+      report.panic(
+        `Not able to create ${report.highlight(
+          AUTH_CONFIG_FILE_PATH
+        )} (bad file descriptor).`
       );
-      process.exit(1);
     }
 
     throw err;

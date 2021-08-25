@@ -1,22 +1,25 @@
+/**
+ * Copyright (c) 2021-present Fleet FN, Inc. All rights reserved.
+ */
+
 import {Fleet, Objects} from '@fleetfn/sdk';
 import chalk from 'chalk';
-import program from 'commander';
 import prompts from 'prompts';
 import simpleGit from 'simple-git/promise';
 
 import {build} from './build';
-import {cmd, createLogger} from '../../shared/logger';
 import {getLinkedProject, linkFolderToProject} from './link';
-import {readAuthConfigFile} from '../../shared/config';
 import {getLocalConfig} from './files';
+import {readAuthConfigFile} from '../../shared/config';
 import humanizePath from '../../shared/humanize-path';
+import report from '../../reporter';
 import stamp from './stamp';
 
 const {Environment, File} = Objects;
 
 const READY = 'READY';
 
-const transformGitHead = (log) => {
+const transformGitHead = (log: any) => {
   if (!log) {
     return undefined;
   }
@@ -29,28 +32,13 @@ const transformGitHead = (log) => {
   };
 };
 
-export default async (argv) => {
-  program
-    .option('-p, --prod', 'Sets the deployment to production')
-    .option(
-      '-v, --verbose',
-      'The Fleet CLI will print all the deployment steps'
-    );
-
-  program.parse(argv);
-
-  const isProd = program.prod;
-  const isVerbose = program.verbose;
-
-  const logger = createLogger({debug: isVerbose});
-  const {log, debug, error, warn, print} = logger;
-
+export default async function deploy(isVerbose: string, isProd: string) {
   const path = process.cwd();
   const git = simpleGit();
-  const localConfig = getLocalConfig(logger, path);
+  const localConfig = getLocalConfig(path);
 
   if (!localConfig) {
-    warn(
+    report.warn(
       `Your project is missing a ${chalk.bold('fleet.yml')} file.`,
       'configuration.html'
     );
@@ -59,20 +47,17 @@ export default async (argv) => {
     let link;
 
     try {
-      link = await getLinkedProject(logger, path);
+      link = await getLinkedProject(path);
     } catch (err) {
-      error(err, null);
-      return 1;
+      return report.panic(err as any);
     }
 
     if (!localConfig.functions) {
-      warn(
+      return report.panic(
         `Your project is missing the ${chalk.yellow.blue(
           'functions'
-        )} property in the ${chalk.bold('fleet.yml')} file.`,
-        'configuration.html'
+        )} property in the ${chalk.bold('fleet.yml')} file.`
       );
-      return 1;
     }
 
     let AUTH_CONFIG;
@@ -80,19 +65,15 @@ export default async (argv) => {
     try {
       AUTH_CONFIG = readAuthConfigFile();
     } catch (err) {
-      warn(
-        `Configure CLI Authentication, run ${cmd('fleet auth -t <token>')}.`,
-        'fleet-cli.html'
+      return report.panic(
+        `Configure CLI Authentication, run ${report.cmd(
+          'fleet auth -t <token>'
+        )}.`
       );
-      return 1;
     }
 
     if (AUTH_CONFIG && !AUTH_CONFIG.token) {
-      warn(
-        'You need to add a personal access token to deploy!',
-        'fleet-cli.html'
-      );
-      return 1;
+      return report.panic('You need to add a personal access token to deploy!');
     }
 
     const fleet = new Fleet({token: AUTH_CONFIG.token});
@@ -107,8 +88,7 @@ export default async (argv) => {
       });
 
       if (!response.value) {
-        print('😔  Aborted. The project has not been configured.\n');
-        return 1;
+        return report.panic('Aborted. The project has not been configured.');
       }
 
       const {projects} = await fleet.project.all();
@@ -117,7 +97,7 @@ export default async (argv) => {
         type: 'select',
         name: 'value',
         message: 'Which project do you want to deploy?',
-        choices: projects.map((project) => ({
+        choices: projects.map((project: any) => ({
           title: project.name,
           value: {
             id: project.id,
@@ -128,30 +108,29 @@ export default async (argv) => {
       });
 
       if (!project.value) {
-        print('😅  Aborted. You need to choose a project.\n');
-        return 1;
+        return report.panic('Aborted. You need to choose a project.');
       }
 
       link = {projectId: project.value.id};
 
-      await linkFolderToProject(logger, path, link, project.value.name);
+      await linkFolderToProject(path, link, project.value.name);
     }
 
-    const entryFiles = localConfig.functions.map((func) =>
+    const entryFiles = localConfig.functions.map((func: any) =>
       func.handler.startsWith('./') ? func.handler : `./${func.handler}`
     );
 
     const buildTime = stamp();
-    log('Build started...');
+    report.log('Build started...');
 
-    const bundle = await build(entryFiles, debug);
+    const bundle = await build(entryFiles, isVerbose);
 
     if (bundle.errors.length > 0) {
-      bundle.errors.forEach(({message}) => error(message, null));
+      bundle.errors.forEach(({message}) => report.error(message));
       return 1;
     }
 
-    log(`Build finished ${chalk.gray.bold(buildTime())}`);
+    report.log(`Build finished ${chalk.gray.bold(buildTime())}`);
 
     const deployTime = stamp();
 
@@ -159,7 +138,8 @@ export default async (argv) => {
       let commit_head;
 
       try {
-        commit_head = transformGitHead(await (await git.log()).latest);
+        const log = await git.log();
+        commit_head = transformGitHead(log.latest);
       } catch (error) {
         // Hide the error assuming the repository has no git
       }
@@ -182,7 +162,7 @@ export default async (argv) => {
         name,
       } = await fleet.deployment.create(environment);
 
-      log(
+      report.log(
         `Deploying ${chalk.bold(
           humanizePath(path)
         )} to the project ${chalk.bold(name)}`
@@ -192,12 +172,12 @@ export default async (argv) => {
         throw message ? message : errorMessage;
       }
 
-      log(`${chalk.cyan.bold(`https://${functionDomain}`)}`);
+      report.log(`${chalk.cyan.bold(`https://${functionDomain}`)}`);
 
-      functions.forEach(({_id, handler}) => {
+      functions.forEach(({_id, handler}: any) => {
         const path = bundle.functions[handler];
 
-        debug(`Deploying the ${handler} function of path ${path}`);
+        report.debug(`Deploying the ${handler} function of path ${path}`);
 
         environment.files.push(new File({path, handler, id: _id}));
       });
@@ -205,13 +185,13 @@ export default async (argv) => {
       const deployments = await fleet.deployment.deploy(environment);
 
       const failedDeployments = deployments.filter(
-        (deploy) => deploy.code !== READY
+        (deploy: any) => deploy.code !== READY
       );
 
       // Checks if any deployment has initialized or error, if it is positive,
       // avoid giving a validate and the deployment must be created again.
       if (failedDeployments.length > 0) {
-        log(
+        report.log(
           `Fail! Unable to deploy ${chalk.bold(
             failedDeployments.length
           )} functions. Try again! ${chalk.gray.bold(deployTime())}`
@@ -221,13 +201,13 @@ export default async (argv) => {
         const {deployPoint} = await fleet.deployment.commit(environment);
 
         if (deployPoint && isProd) {
-          log(
+          report.log(
             `${chalk.gray('Ready! Deployed')} ${chalk.cyan.bold(
               `https://${domain}`
             )} ${chalk.gray.bold(deployTime())}`
           );
         } else {
-          log(
+          report.log(
             `${chalk.gray('Ready! Deployed')} ${chalk.cyan.bold(
               `https://${functionDomain}`
             )} ${chalk.gray.bold(deployTime())}`
@@ -235,8 +215,7 @@ export default async (argv) => {
         }
       }
     } catch (err) {
-      error(err, null);
-      return 1;
+      report.panic(err as Error);
     }
   }
-};
+}

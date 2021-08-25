@@ -52,8 +52,12 @@ class Reporter {
     }
   };
 
-  log = (text: string) => {
-    process.stderr.write(`${this.format.grey('>')} ${text}\n`);
+  log = (text: string, span?: string) => {
+    if (!span) {
+      text = `${this.format.grey('>')} ${text}`;
+    }
+
+    process.stderr.write(`${text}\n`);
   };
 
   debug = (text: string) => {

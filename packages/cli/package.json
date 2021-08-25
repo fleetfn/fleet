@@ -24,6 +24,13 @@
 	],
 	"devDependencies": {
 		"@fleetfn/sdk": "^1.0.0-alpha.2",
+		"@types/adm-zip": "^0.4.34",
+		"@types/fs-extra": "^9.0.12",
+		"@types/load-json-file": "^5.1.0",
+		"@types/ms": "^0.7.31",
+		"@types/node-fetch": "^2.5.12",
+		"@types/prompts": "^2.0.14",
+		"@types/terser-webpack-plugin": "^5.0.4",
 		"@types/update-notifier": "^5.1.0",
 		"adm-zip": "^0.4.16",
 		"ansi-escapes": "^4.3.1",

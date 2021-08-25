@@ -1,9 +1,15 @@
+/**
+ * Copyright (c) 2021-present Fleet FN, Inc. All rights reserved.
+ */
+
 import {existsSync, readFileSync} from 'fs';
 import {join, extname} from 'path';
 import loadJSON from 'load-json-file';
 import YAML from 'yaml';
 
-function getConfigPath(prefix) {
+import report from '../../reporter';
+
+function getConfigPath(prefix: string) {
   const configYaml = join(prefix, 'fleet.yml');
   const configJson = join(prefix, 'fleet.json');
 
@@ -16,26 +22,24 @@ function getConfigPath(prefix) {
   return null;
 }
 
-function getConfigJson(error, path) {
+function getConfigJson(path: string) {
   try {
     return loadJSON.sync(path);
-  } catch (err) {
+  } catch (err: any) {
     if (err.name === 'JSONError') {
-      error(err.message, null);
+      report.panic(err.message);
     } else {
       const code = err.code ? `(${err.code})` : '';
-      error(`Failed to read the \`fleet.json\` file ${code}`, null);
+      report.panic(`Failed to read the \`fleet.json\` file ${code}`, null);
     }
-
-    process.exit(1);
   }
 }
 
-function getConfigYaml(error, path) {
+function getConfigYaml(path: string) {
   try {
     const file = readFileSync(path, 'utf8');
     const content = YAML.parse(file);
-    const functions = [];
+    const functions: Array<Record<string, string>> = [];
 
     if (content.functions) {
       Object.keys(content.functions).forEach((key) => {
@@ -49,15 +53,13 @@ function getConfigYaml(error, path) {
     }
 
     return content;
-  } catch (err) {
+  } catch (err: any) {
     const code = err.code ? `(${err.code})` : '';
-    error(`Failed to parse the \`fleet.yml\` file ${code}`, null);
-
-    process.exit(1);
+    report.panic(`Failed to parse the \`fleet.yml\` file ${code}`);
   }
 }
 
-export function getLocalConfig({error}, prefix) {
+export function getLocalConfig(prefix: string) {
   const path = getConfigPath(prefix);
 
   if (!path) {
@@ -68,9 +70,9 @@ export function getLocalConfig({error}, prefix) {
 
   switch (ext) {
     case '.json':
-      return getConfigJson(error, path);
+      return getConfigJson(path);
     case '.yml':
-      return getConfigYaml(error, path);
+      return getConfigYaml(path);
     default:
       return null;
   }
