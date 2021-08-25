@@ -44,6 +44,7 @@
 	},
 	"dependencies": {
 		"fs-extra": "^9.0.0",
+		"pretty-error": "^3.0.4",
 		"simple-git": "^2.2.0",
 		"update-notifier": "^5.1.0",
 		"webpack": "^5.28.0",
