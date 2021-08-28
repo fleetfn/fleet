@@ -24,7 +24,7 @@ export const createCli = (version: string) => {
     .action((cmd) => deploy(cmd.verbose, cmd.prod));
 
   cli
-    .command('auth <token>')
+    .command('auth')
     .description('Authorization to the platform')
     .option('-t, --token <token>', 'Login token')
     .action((cmd) => auth(cmd.token));
@@ -32,7 +32,6 @@ export const createCli = (version: string) => {
   cli
     .command('init [example]')
     .description('Start a new project from an example')
-    .option('-t, --token <token>', 'Login token')
     .action((example) => init(example));
 
   cli.parse(process.argv);
