@@ -6,6 +6,7 @@
 		"packages/*"
 	],
 	"scripts": {
+		"build": "cd packages/sdk && yarn build && cd ../cli && yarn build",
 		"lint-eslint": "eslint \"**/*.{js,ts}\"",
 		"lint-typescript": "tsc --noEmit --declaration",
 		"lint": "yarn lint-eslint && yarn lint-typescript",
