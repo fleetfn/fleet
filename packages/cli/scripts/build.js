@@ -3,7 +3,7 @@ const webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
 
 const config = {
-  entry: './src/index.js',
+  entry: './src/index.ts',
   mode: 'production',
   target: 'node',
   optimization: {
@@ -26,7 +26,7 @@ const config = {
   resolve: {
     extensions: ['.ts', '.js'],
   },
-  externals: ['webpack', 'terser-webpack-plugin', 'xdg-app-paths'],
+  externals: ['webpack', 'terser-webpack-plugin', 'xdg-app-paths', 'update-notifier'],
   output: {
     filename: 'fleet.js',
     libraryTarget: 'commonjs2',

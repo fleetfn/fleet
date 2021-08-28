@@ -42,7 +42,7 @@ export default async function deploy(isVerbose: string, isProd: string) {
       `Your project is missing a ${chalk.bold('fleet.yml')} file.`,
       'configuration.html'
     );
-    return 1;
+    return;
   } else {
     let link;
 
@@ -127,7 +127,8 @@ export default async function deploy(isVerbose: string, isProd: string) {
 
     if (bundle.errors.length > 0) {
       bundle.errors.forEach(({message}) => report.error(message));
-      return 1;
+
+      return report.panic('Exiting with error on compilation.');
     }
 
     report.log(`Build finished ${chalk.gray.bold(buildTime())}`);
@@ -177,7 +178,9 @@ export default async function deploy(isVerbose: string, isProd: string) {
       functions.forEach(({_id, handler}: any) => {
         const path = bundle.functions[handler];
 
-        report.debug(`Deploying the ${handler} function of path ${path}`);
+        if (isVerbose) {
+          report.debug(`Deploying the ${handler} function of path ${path}`);
+        }
 
         environment.files.push(new File({path, handler, id: _id}));
       });
@@ -191,12 +194,11 @@ export default async function deploy(isVerbose: string, isProd: string) {
       // Checks if any deployment has initialized or error, if it is positive,
       // avoid giving a validate and the deployment must be created again.
       if (failedDeployments.length > 0) {
-        report.log(
+        report.panic(
           `Fail! Unable to deploy ${chalk.bold(
             failedDeployments.length
           )} functions. Try again! ${chalk.gray.bold(deployTime())}`
         );
-        return 1;
       } else {
         const {deployPoint} = await fleet.deployment.commit(environment);
 

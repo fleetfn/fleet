@@ -16,7 +16,11 @@ function joinPath(...segments: Array<string>) {
 const FLEET_DIR = getFleetDir();
 const AUTH_CONFIG_FILE_PATH = joinPath(FLEET_DIR, 'auth.json');
 
-export const readAuthConfigFile = () => {
+type Config = {
+  token: string;
+};
+
+export const readAuthConfigFile = (): Config => {
   if (process.env.FLEET_API_TOKEN) {
     return {
       token: process.env.FLEET_API_TOKEN,
@@ -24,10 +28,6 @@ export const readAuthConfigFile = () => {
   }
 
   return loadJSON.sync(AUTH_CONFIG_FILE_PATH);
-};
-
-type Config = {
-  token: string;
 };
 
 export const writeToAuthConfigFile = (config: Config) => {

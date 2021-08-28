@@ -30,7 +30,7 @@ function getConfigJson(path: string) {
       report.panic(err.message);
     } else {
       const code = err.code ? `(${err.code})` : '';
-      report.panic(`Failed to read the \`fleet.json\` file ${code}`, null);
+      report.panic(`Failed to read the \`fleet.json\` file ${code}`);
     }
   }
 }
@@ -59,7 +59,28 @@ function getConfigYaml(path: string) {
   }
 }
 
-export function getLocalConfig(prefix: string) {
+type WorkfuncHttp = {
+  method: Array<
+    'GET' | 'POST' | 'PUT' | 'PATCH' | 'HEAD' | 'OPTIONS' | 'DELETE'
+  >;
+  path: string;
+};
+
+type Workfunc = {
+  asynchronousThreshold: number;
+  handler: string;
+  http: WorkfuncHttp;
+  name: string;
+  timeout: number;
+};
+
+type FleetConfig = {
+  env?: Record<string, string>;
+  functions: Array<Workfunc>;
+  regions: Array<string>;
+};
+
+export function getLocalConfig(prefix: string): FleetConfig | null {
   const path = getConfigPath(prefix);
 
   if (!path) {
@@ -70,7 +91,7 @@ export function getLocalConfig(prefix: string) {
 
   switch (ext) {
     case '.json':
-      return getConfigJson(path);
+      return getConfigJson(path) as FleetConfig;
     case '.yml':
       return getConfigYaml(path);
     default:
