@@ -1,31 +1,40 @@
+/**
+ * Copyright (c) 2021-present Fleet FN, Inc. All rights reserved.
+ */
+
 import {Agent} from 'https';
 import chalk from 'chalk';
-import nFetch from 'node-fetch/lib/index';
+import nFetch from 'node-fetch';
+import type {RequestInit} from 'node-fetch';
 
-function error(message) {
+function error(message: string) {
   process.stderr.write(
     `${chalk.red('>')} ${chalk`{red.bold Error!} ${message}`}\n`
   );
 }
 
-export default function fetch({
+type Options = RequestInit & {
+  apiUrl: string;
+  json?: boolean;
+  token: string;
+};
+
+export default async function fetch({
   apiUrl,
   body,
-  headers,
+  headers = {},
   json = true,
   method = 'POST',
   token,
-}) {
+}: Options) {
   const options = {
     agent: new Agent({
-      freeSocketKeepAliveTimeout: 30000,
-      freeSocketTimeout: 30000,
       keepAlive: true,
       maxFreeSockets: 20,
       maxSockets: 200,
       timeout: 60000,
     }),
-    credentials: true,
+    body,
     method,
     headers: {
       ...headers,
@@ -33,11 +42,8 @@ export default function fetch({
     },
   };
 
-  if (body) {
-    options.body = body;
-  }
-
   if (json) {
+    // @ts-ignore
     options.headers['Content-Type'] = 'application/json';
     options.body = JSON.stringify(body);
   }
