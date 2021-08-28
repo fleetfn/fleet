@@ -1,9 +1,14 @@
+/**
+ * Copyright (c) 2021-present Fleet FN, Inc. All rights reserved.
+ */
+
 import {FleetResource} from '../FleetResource';
+import type {Environment} from '../objects/Environment';
 
 export class Deployment extends FleetResource {
   path = 'function/deployments';
 
-  create(payload) {
+  create(payload: Environment) {
     return this.createMethod({
       object: 'create',
       path: 'create',
@@ -11,7 +16,7 @@ export class Deployment extends FleetResource {
     });
   }
 
-  deploy(payload) {
+  deploy(payload: Environment) {
     return this.createMethod({
       headers: {'Content-Type': 'application/octet-stream'},
       json: false,
@@ -21,7 +26,7 @@ export class Deployment extends FleetResource {
     });
   }
 
-  commit(payload) {
+  commit(payload: Environment) {
     return this.createMethod({
       object: 'commit',
       path: 'finish',

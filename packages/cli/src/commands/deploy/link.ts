@@ -1,8 +1,14 @@
+/**
+ * Copyright (c) 2021-present Fleet FN, Inc. All rights reserved.
+ */
+
 import {ensureDir} from 'fs-extra';
 import {join} from 'path';
 import {promisify} from 'util';
 import chalk from 'chalk';
 import fs from 'fs';
+
+import report from '../../reporter';
 
 const FLEET_FOLDER = '.fleet';
 const FLEET_PROJECT = 'project.json';
@@ -10,9 +16,7 @@ const FLEET_PROJECT = 'project.json';
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
 
-export const getLinkedProject = async (output, path) => {
-  const {error} = output;
-
+export const getLinkedProject = async (path: string) => {
   try {
     if (process.env.FLEET_PROJECT_ID) {
       return {
@@ -33,15 +37,14 @@ export const getLinkedProject = async (output, path) => {
         throw new Error();
       }
     } catch (err) {
-      error(
-        'Fleet project settings are invalid. Try the link again, delete the `fleet.json` directory.',
-        null
+      report.error(
+        'Fleet project settings are invalid. Try the link again, delete the `fleet.json` directory.'
       );
       return;
     }
 
     return link;
-  } catch (error) {
+  } catch (error: any) {
     if (['ENOENT', 'ENOTDIR'].includes(error.code)) {
       return null;
     }
@@ -50,14 +53,15 @@ export const getLinkedProject = async (output, path) => {
   }
 };
 
-export const linkFolderToProject = async (
-  output,
-  path,
-  projectLink,
-  projectName
-) => {
-  const {print} = output;
+type ConfigLink = {
+  projectId: string;
+};
 
+export const linkFolderToProject = async (
+  path: string,
+  projectLink: ConfigLink,
+  projectName: string
+) => {
   await ensureDir(join(path, FLEET_FOLDER));
 
   await writeFile(
@@ -82,9 +86,10 @@ export const linkFolderToProject = async (
     // eslint-disable-next-line no-empty
   } catch (error) {}
 
-  print(
-    `🔗  Linked to ${chalk.bold(projectName)} ${chalk.gray(
+  report.log(
+    `Linked to ${chalk.bold(projectName)} ${chalk.gray(
       '(created .fleet)\n\n'
-    )}`
+    )}`,
+    '🔗  '
   );
 };

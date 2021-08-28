@@ -1,6 +1,49 @@
+/**
+ * Copyright (c) 2021-present Fleet FN, Inc. All rights reserved.
+ */
+
 import {Action} from './Action';
 
-export class Environment extends Action {
+type WorkfuncHttp = {
+  method: Array<
+    'GET' | 'POST' | 'PUT' | 'PATCH' | 'HEAD' | 'OPTIONS' | 'DELETE'
+  >;
+  path: string;
+};
+
+type Workfunc = {
+  asynchronousThreshold: number;
+  handler: string;
+  http: WorkfuncHttp;
+  name: string;
+  timeout: number;
+};
+
+type CommitHead = {
+  date: string;
+  hash: string;
+  message: string;
+  refs: string;
+};
+
+type EnvironmentProps = {
+  commit_head?: CommitHead;
+  environment_variables?: Record<string, string>;
+  project_id: string;
+  regions: Array<string>;
+  resources: Array<Workfunc>;
+  stage: 'prod' | 'dev';
+};
+
+export class Environment extends Action<unknown> {
+  files: Array<any>;
+  commit_head?: CommitHead;
+  environment_variables?: Record<string, string>;
+  project_id: string;
+  regions: Array<string>;
+  resources: Array<Workfunc>;
+  stage: 'prod' | 'dev';
+
   constructor({
     commit_head,
     environment_variables,
@@ -8,7 +51,7 @@ export class Environment extends Action {
     regions,
     resources,
     stage,
-  }) {
+  }: EnvironmentProps) {
     super();
 
     this.files = [];
@@ -27,7 +70,7 @@ export class Environment extends Action {
       // Normalizes the handler extensions, once the build is done locally
       // we need to normalize to `.js` when file is ts.
       functions: resources.map((func) => {
-        const newFunc = {...func};
+        const newFunc: Workfunc & {gitCommitLatest?: CommitHead} = {...func};
 
         /// Only add the latest git commit if the repo supports git
         if (commit_head) {
