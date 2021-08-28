@@ -27,7 +27,7 @@ class Reporter {
   };
 
   blank = () => {
-    process.stderr.write(`\n`);
+    process.stderr.write('\n');
   };
 
   success = (text: string) => {

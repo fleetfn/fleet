@@ -26,7 +26,12 @@ const config = {
   resolve: {
     extensions: ['.ts', '.js'],
   },
-  externals: ['webpack', 'terser-webpack-plugin', 'xdg-app-paths', 'update-notifier'],
+  externals: [
+    'webpack',
+    'terser-webpack-plugin',
+    'xdg-app-paths',
+    'update-notifier',
+  ],
   output: {
     filename: 'fleet.js',
     libraryTarget: 'commonjs2',
