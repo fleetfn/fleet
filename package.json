@@ -6,9 +6,11 @@
 		"packages/*"
 	],
 	"scripts": {
-		"lint": "eslint . --ext .js",
-		"format": "prettier --write -- \"**/*.js\"",
-		"format:check": "prettier --list-different -- \"**/*.js\""
+		"lint-eslint": "eslint \"**/*.{js,ts}\"",
+		"lint-typescript": "tsc --noEmit --declaration",
+		"lint": "yarn lint-eslint && yarn lint-typescript",
+		"format": "prettier --write -- \"**/*.{js,ts}\"",
+		"format:check": "prettier --list-different -- \"**/*.{js,ts}\""
 	},
 	"engines": {
 		"node": ">= 10",
