@@ -18,7 +18,11 @@ function filterByExtension(ext: string) {
   return (v: string) => v.endsWith('.' + ext);
 }
 
-export function build(entryFiles: Array<string> = [], debug: string) {
+export function build(
+  pathDir: string,
+  entryFiles: Array<string> = [],
+  debug: string
+) {
   return new Promise<Bundle>(async (resolve, reject) => {
     const entryFilesWithName: Record<string, string> = {};
 
@@ -50,12 +54,30 @@ export function build(entryFiles: Array<string> = [], debug: string) {
           }),
         ] as any,
       },
+      cache: {
+        type: 'filesystem' as const,
+        name: 'deployment',
+        cacheLocation: path.join(
+          pathDir,
+          '.fleet',
+          'cache',
+          'webpack',
+          'stage-deployment'
+        ),
+      },
       module: {
         rules: [
           {
-            include: /node_modules/,
-            test: /\.mjs$/,
-            type: 'javascript/auto',
+            test: [/.js$/, /.ts$/],
+            exclude: /node_modules/,
+            use: {
+              loader: 'babel-loader',
+              options: {
+                cacheCompression: false,
+                cacheDirectory: true,
+                presets: [require('@babel/preset-typescript')],
+              },
+            },
           },
         ],
       },
