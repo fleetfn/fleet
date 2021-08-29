@@ -4,6 +4,7 @@
 
 import chokidar from 'chokidar';
 import fs from 'fs-extra';
+import ms from 'ms';
 import path from 'path';
 import webpack from 'webpack';
 
@@ -14,9 +15,9 @@ import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 
 import {createFunctionManifest} from './manifest';
 import {getLocalConfig} from '../../shared/fleet-config';
+import {reportWebpackWarnings} from '../../shared/webpack-error-utils';
 import report from '../../reporter';
 import store, {Actions} from './store';
-import {reportWebpackWarnings} from '../../shared/webpack-error-utils';
 
 function getFleetFunctionConfig(pathDir: string) {
   const localConfig = getLocalConfig(pathDir);
@@ -170,7 +171,12 @@ export async function watch(pathDir: string) {
       if (isFirstBuild) {
         isFirstBuild = false;
       } else {
-        report.success('Rebuilt functions');
+        const time = stats.endTime - stats.startTime;
+        report.success(
+          `Rebuilt functions ${report.format.gray(
+            `[${time < 1000 ? `${time}ms` : ms(time)}]`
+          )}`
+        );
       }
     };
 
