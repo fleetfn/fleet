@@ -9,7 +9,7 @@ import simpleGit from 'simple-git/promise';
 
 import {build} from './build';
 import {getLinkedProject, linkFolderToProject} from './link';
-import {getLocalConfig} from './files';
+import {getLocalConfig} from '../../shared/fleet-config';
 import {readAuthConfigFile} from '../../shared/config';
 import humanizePath from '../../shared/humanize-path';
 import report from '../../reporter';

@@ -7,7 +7,7 @@ import {join, extname} from 'path';
 import loadJSON from 'load-json-file';
 import YAML from 'yaml';
 
-import report from '../../reporter';
+import report from '../reporter';
 
 function getConfigPath(prefix: string) {
   const configYaml = join(prefix, 'fleet.yml');
@@ -59,14 +59,21 @@ function getConfigYaml(path: string) {
   }
 }
 
-type WorkfuncHttp = {
-  method: Array<
-    'GET' | 'POST' | 'PUT' | 'PATCH' | 'HEAD' | 'OPTIONS' | 'DELETE'
-  >;
+export type Method =
+  | 'GET'
+  | 'POST'
+  | 'PUT'
+  | 'PATCH'
+  | 'HEAD'
+  | 'OPTIONS'
+  | 'DELETE';
+
+export type WorkfuncHttp = {
+  method: Array<Method>;
   path: string;
 };
 
-type Workfunc = {
+export type Workfunc = {
   asynchronousThreshold: number;
   handler: string;
   http: WorkfuncHttp;
