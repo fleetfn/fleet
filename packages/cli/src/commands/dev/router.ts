@@ -62,13 +62,13 @@ export function createDevRouter() {
     });
 
     if (workfunc) {
-      await shouldFunctionCompiled(workfunc);
-
       report.log(
         `Function invoked ${report.format.bold(
           workfunc.name
         )} ${report.format.gray(`path=${path}, method=${method}`)}`
       );
+
+      await shouldFunctionCompiled(workfunc);
       const runTime = stamp();
 
       try {
