@@ -49,7 +49,7 @@ export function createFunctionManifest(
         compiledFunctionName
       );
 
-      entries[name] = sourceFilePath;
+      entries[path.join(dir, name)] = sourceFilePath;
 
       return {
         ...workfunc,
