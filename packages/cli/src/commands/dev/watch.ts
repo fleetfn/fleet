@@ -57,7 +57,7 @@ async function createWebpackConfig(
 
   const processEnv = Object.keys(env).reduce<Record<string, string>>(
     (accumulator, key) => {
-      accumulator[`process.env.${key}`] = env[key];
+      accumulator[`process.env.${key}`] = JSON.stringify(env[key]);
 
       return accumulator;
     },
