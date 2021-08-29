@@ -23,6 +23,7 @@
 		"bin"
 	],
 	"devDependencies": {
+		"@babel/preset-typescript": "^7.15.0",
 		"@fleetfn/sdk": "^1.0.0-alpha.2",
 		"@types/adm-zip": "^0.4.34",
 		"@types/fs-extra": "^9.0.12",
@@ -37,6 +38,7 @@
 		"commander": "^8.1.0",
 		"console": "^0.7.2",
 		"encoding": "^0.1.12",
+		"fs-extra": "^10.0.0",
 		"json-parse-better-errors": "^1.0.2",
 		"load-json-file": "^6.2.0",
 		"ms": "^2.1.1",
@@ -44,13 +46,14 @@
 		"ora": "^4.0.4",
 		"progress": "^2.0.3",
 		"prompts": "^2.3.0",
+		"react-dev-utils": "^11.0.4",
 		"ts-loader": "^9.2.5",
 		"webpack-merge": "^5.7.3",
 		"write-json-file": "^4.2.1",
 		"yaml": "^1.10.0"
 	},
 	"dependencies": {
-		"fs-extra": "^9.0.0",
+		"chokidar": "^3.5.2",
 		"pretty-error": "^3.0.4",
 		"simple-git": "^2.2.0",
 		"update-notifier": "^5.1.0",

@@ -27,10 +27,11 @@ const config = {
     extensions: ['.ts', '.js'],
   },
   externals: [
-    'webpack',
+    'chokidar',
     'terser-webpack-plugin',
-    'xdg-app-paths',
     'update-notifier',
+    'webpack',
+    'xdg-app-paths',
   ],
   output: {
     filename: 'fleet.js',
