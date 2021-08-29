@@ -10,7 +10,7 @@ import {watch} from './watch';
 export default async function dev(ip: string, port: string) {
   const path = process.cwd();
 
-  report.log('Fleet Development environment', false);
+  report.log('Fleet Development environment!\n', false);
 
   await watch(path);
 
@@ -19,8 +19,10 @@ export default async function dev(ip: string, port: string) {
   await server.listen(ip, port);
 
   report.log(
-    `Listening on ${report.format.bold(`http://${ip}:${port}`)}\n`,
+    `${report.format.hex('#0076FF')('✔')} Listening on ${report.format.bold(
+      `http://${ip}:${port}`
+    )}\n`,
     false
   );
-  report.log('Log data will stream in below: \n', false);
+  report.log(report.format.gray('Log data will stream in below: \n'), false);
 }

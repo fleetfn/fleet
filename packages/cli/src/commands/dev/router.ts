@@ -9,6 +9,7 @@ import chokidar from 'chokidar';
 import {request} from './request';
 import {response} from './response';
 import report from '../../reporter';
+import stamp from '../../shared/stamp';
 import store from './store';
 import type {FunctionManifest} from './manifest';
 import type {Method} from '../../shared/fleet-config';
@@ -66,11 +67,9 @@ export function createDevRouter() {
       report.log(
         `Function invoked ${report.format.bold(
           workfunc.name
-        )}: path=${report.format.bold(path)}, method=${report.format.bold(
-          method
-        )}`
+        )} ${report.format.gray(`path=${path}, method=${method}`)}`
       );
-      const start = Date.now();
+      const runTime = stamp();
 
       try {
         // Fleet CLI is compiled with webpack if adding `require` we cannot
@@ -102,9 +101,9 @@ export function createDevRouter() {
       }
 
       report.log(
-        `Executed function ${report.format.bold(workfunc.name)} in ${
-          Date.now() - start
-        }ms`
+        `Executed function ${report.format.bold(
+          workfunc.name
+        )} ${report.format.gray(runTime())}`
       );
     } else {
       report.error(
