@@ -123,7 +123,7 @@ export default async function deploy(isVerbose: string, isProd: string) {
     const buildTime = stamp();
     report.log('Build started...');
 
-    const bundle = await build(entryFiles, isVerbose);
+    const bundle = await build(path, entryFiles, isVerbose);
 
     if (bundle.errors.length > 0) {
       bundle.errors.forEach(({message}) => report.error(message));
