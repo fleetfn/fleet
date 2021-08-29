@@ -87,9 +87,9 @@ export const linkFolderToProject = async (
   } catch (error) {}
 
   report.log(
-    `Linked to ${chalk.bold(projectName)} ${chalk.gray(
+    `🔗  Linked to ${chalk.bold(projectName)} ${chalk.gray(
       '(created .fleet)\n\n'
     )}`,
-    '🔗  '
+    false
   );
 };
