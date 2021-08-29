@@ -31,7 +31,7 @@ class Reporter {
   };
 
   success = (text: string) => {
-    this.log(`${this.format.green.bold('> Success!')} ${text}`);
+    this.log(`${this.format.green.bold('Success!')} ${text}`);
   };
 
   highlight = (text: string) => {
@@ -44,7 +44,7 @@ class Reporter {
     )}`;
   };
 
-  warn = (text: string, slug: string) => {
+  warn = (text: string, slug: string | null) => {
     this.log(`${this.format.yellow.bold('Warn!')} ${text}`);
 
     if (slug !== null) {
@@ -52,8 +52,8 @@ class Reporter {
     }
   };
 
-  log = (text: string, span?: string) => {
-    if (!span) {
+  log = (text: string, span: boolean = true) => {
+    if (span) {
       text = `${this.format.grey('>')} ${text}`;
     }
 
