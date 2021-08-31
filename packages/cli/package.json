@@ -24,7 +24,7 @@
 	],
 	"devDependencies": {
 		"@babel/preset-typescript": "^7.15.0",
-		"@fleetfn/sdk": "^1.0.0-alpha.2",
+		"@fleetfn/sdk": "^1.0.0-alpha.3",
 		"@types/adm-zip": "^0.4.34",
 		"@types/fs-extra": "^9.0.12",
 		"@types/ms": "^0.7.31",
