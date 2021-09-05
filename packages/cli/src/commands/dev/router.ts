@@ -3,8 +3,9 @@
  */
 
 import {IncomingMessage, ServerResponse} from 'http';
-import fs from 'fs-extra';
+import {URL} from 'url';
 import chokidar from 'chokidar';
+import fs from 'fs-extra';
 
 import {request} from './request';
 import {response} from './response';
@@ -49,15 +50,17 @@ async function shouldFunctionCompiled(workfunc: FunctionManifest) {
 
 export function createDevRouter() {
   return async (req: IncomingMessage, res: ServerResponse) => {
-    const path = req.url ?? '';
+    const url = req.url ?? '';
     const method = req.method ?? 'GET';
 
     const state = store.getState();
 
     const workfunc = state.manifest.functions.find((workfunc) => {
+      const path = new URL(`http://${req.headers.host}${url}`);
+
       return (
         workfunc.http.method.includes(method as Method) &&
-        path.match(workfunc.functionPathRegex)
+        path.pathname.match(workfunc.functionPathRegex)
       );
     });
 
@@ -65,7 +68,7 @@ export function createDevRouter() {
       report.log(
         `Function invoked ${report.format.bold(
           workfunc.name
-        )} ${report.format.gray(`path=${path}, method=${method}`)}`
+        )} ${report.format.gray(`path=${url}, method=${method}`)}`
       );
 
       await shouldFunctionCompiled(workfunc);
@@ -108,7 +111,7 @@ export function createDevRouter() {
     } else {
       report.error(
         `No function exists for path (${report.format.bold(
-          path
+          url
         )}) and method (${report.format.bold(method)})`
       );
 
