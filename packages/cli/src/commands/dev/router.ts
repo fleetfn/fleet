@@ -30,6 +30,8 @@ async function shouldFunctionCompiled(workfunc: FunctionManifest) {
     return;
   }
 
+  report.log('The function file has not been compiled yet. Awaiting...');
+
   const time = new Date();
 
   fs.utimesSync(workfunc.sourceFilePath, time, time);
