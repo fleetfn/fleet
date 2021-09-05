@@ -4,9 +4,7 @@
 
 import {STATUS_CODES, ServerResponse} from 'http';
 
-type Headers = {
-  [propName: string]: any;
-};
+type PreSend = (payload: any) => Promise<any> | void;
 
 const CONTENT_TYPE = {
   JSON: 'application/json; charset=utf-8',
@@ -31,7 +29,8 @@ class ErrorFactory {
 export const response = (res: ServerResponse) => {
   const state = {
     hasStatusCode: false,
-    headers: {} as Headers,
+    headers: {} as Record<string, any>,
+    preSend: null as null | PreSend,
     responseSent: false,
     serializer: null as null | Function,
     statusCode: 200,
@@ -50,7 +49,7 @@ export const response = (res: ServerResponse) => {
     return self;
   };
 
-  const sendEnd = (payload?: any) => {
+  const sendEnd = async (payload?: any) => {
     const statusCode = state.statusCode;
 
     if (payload === undefined || payload === null) {
@@ -77,6 +76,10 @@ export const response = (res: ServerResponse) => {
     }
 
     state.responseSent = true;
+
+    if (state.preSend) {
+      await state.preSend(payload);
+    }
 
     res.writeHead(statusCode, state.headers);
     res.end(payload);
@@ -172,6 +175,11 @@ export const response = (res: ServerResponse) => {
     sendEnd(payload);
   };
 
+  const preSend = (preSend: PreSend) => {
+    state.preSend = preSend;
+    return self;
+  };
+
   const getHeader = (key: string) => {
     return state.headers[key.toLowerCase()];
   };
@@ -207,7 +215,7 @@ export const response = (res: ServerResponse) => {
     return self;
   };
 
-  const setHeaders = (headers: Headers) => {
+  const setHeaders = (headers: Record<string, string>) => {
     const keys = Object.keys(headers);
 
     for (var i = 0; i < keys.length; i++) {
@@ -239,6 +247,7 @@ export const response = (res: ServerResponse) => {
     code: status,
     getHeader,
     hasHeader,
+    preSend,
     redirect,
     removeHeader,
     send,

@@ -43,6 +43,7 @@ export const request = async (req: IncomingMessage) => {
   return {
     headers: getHeaders(req.headers),
     body,
+    ip: req.socket.remoteAddress,
     url: req.url,
     method: req.method,
     query: getQuery(req),
