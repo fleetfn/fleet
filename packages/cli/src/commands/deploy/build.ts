@@ -9,7 +9,7 @@ import webpack from 'webpack';
 
 import report from '../../reporter';
 
-type Bundle = {
+export type Bundle = {
   functions: Record<string, string>;
   errors: Array<Record<string, string>>;
 };

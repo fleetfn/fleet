@@ -8,12 +8,14 @@ import prompts from 'prompts';
 import simpleGit from 'simple-git/promise';
 
 import {build} from './build';
+import {getFrameworks} from '../../shared/frameworks';
 import {getLinkedProject, linkFolderToProject} from './link';
 import {getLocalConfig} from '../../shared/fleet-config';
 import {readAuthConfigFile} from '../../shared/config';
 import humanizePath from '../../shared/humanize-path';
 import report from '../../reporter';
 import stamp from '../../shared/stamp';
+import type {Bundle} from './build';
 
 const {Environment, File} = Objects;
 
@@ -116,22 +118,28 @@ export default async function deploy(isVerbose: string, isProd: string) {
       await linkFolderToProject(path, link, project.value.name);
     }
 
-    const entryFiles = localConfig.functions.map((func: any) =>
-      func.handler.startsWith('./') ? func.handler : `./${func.handler}`
-    );
+    const hasFramework = await getFrameworks(path);
 
-    const buildTime = stamp();
-    report.log('Build started...');
+    let bundle: Bundle | undefined;
 
-    const bundle = await build(path, entryFiles, isVerbose);
+    if (hasFramework) {
+      const entryFiles = localConfig.functions.map((func: any) =>
+        func.handler.startsWith('./') ? func.handler : `./${func.handler}`
+      );
 
-    if (bundle.errors.length > 0) {
-      bundle.errors.forEach(({message}) => report.error(message));
+      const buildTime = stamp();
+      report.log('Build started...');
 
-      return report.panic('Exiting with error on compilation.');
+      bundle = await build(path, entryFiles, isVerbose);
+
+      if (bundle.errors.length > 0) {
+        bundle.errors.forEach(({message}) => report.error(message));
+
+        return report.panic('Exiting with error on compilation.');
+      }
+
+      report.log(`Build finished ${chalk.gray.bold(buildTime())}`);
     }
-
-    report.log(`Build finished ${chalk.gray.bold(buildTime())}`);
 
     const deployTime = stamp();
 
@@ -176,7 +184,7 @@ export default async function deploy(isVerbose: string, isProd: string) {
       report.log(`${chalk.cyan.bold(`https://${functionDomain}`)}`);
 
       functions.forEach(({_id, handler}: any) => {
-        const path = bundle.functions[handler];
+        const path = bundle?.functions[handler] ?? handler;
 
         if (isVerbose) {
           report.debug(`Deploying the ${handler} function of path ${path}`);
