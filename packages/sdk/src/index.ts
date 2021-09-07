@@ -8,6 +8,8 @@ import fetch from './fetch';
 import {Deployment} from './resources/Deployment';
 import {Project} from './resources/Project';
 
+export * from './types';
+
 export type FleeProps = {
   token: string;
   url?: string;

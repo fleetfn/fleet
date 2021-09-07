@@ -3,12 +3,43 @@
  */
 
 import {FleetResource} from '../FleetResource';
+import type {Stage} from '../types';
 import type {Environment} from '../objects/Environment';
 
-export class Deployment extends FleetResource {
-  path = 'function/deployments';
+type WorkloadResult = {
+  filename: string;
+  id: string;
+  name: string;
+};
 
-  create(payload: Environment) {
+type CreateDeploymentResult = {
+  id: string;
+  uid: string;
+  object: 'deployment';
+  owner_id: string;
+  regions: Array<string>;
+  ready_state: string;
+  url: string;
+  last_deployment_deleted: boolean;
+  functions: Array<WorkloadResult>;
+  created: Date;
+  updated: Date;
+};
+
+type CommitDeploymentResult = {
+  id: string;
+  object: 'deployment';
+  promote: boolean;
+  url: string;
+  stage: Stage;
+};
+
+type FilesDeploymentResult = string;
+
+export class Deployment extends FleetResource {
+  path = 'deployments';
+
+  create(payload: Environment): Promise<CreateDeploymentResult> {
     return this.createMethod({
       object: 'create',
       path: 'create',
@@ -16,7 +47,7 @@ export class Deployment extends FleetResource {
     });
   }
 
-  deploy(payload: Environment) {
+  deploy(payload: Environment): Promise<Array<FilesDeploymentResult>> {
     return this.createMethod({
       headers: {'Content-Type': 'application/octet-stream'},
       json: false,
@@ -26,10 +57,10 @@ export class Deployment extends FleetResource {
     });
   }
 
-  commit(payload: Environment) {
+  commit(payload: Environment): Promise<CommitDeploymentResult> {
     return this.createMethod({
       object: 'commit',
-      path: 'finish',
+      path: 'commit',
       payload,
     });
   }
