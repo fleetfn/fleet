@@ -81,7 +81,7 @@ export type Workfunc = {
   timeout: number;
 };
 
-type FleetConfig = {
+export type FleetConfig = {
   env?: Record<string, string>;
   functions: Array<Workfunc>;
   regions: Array<string>;

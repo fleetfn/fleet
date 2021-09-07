@@ -10,6 +10,7 @@ import webpack from 'webpack';
 
 import {createFunctionManifest} from './manifest';
 import {formatWebpackMessages} from '../../shared/format-webpack-messages';
+import {getFrameworks} from '../../shared/frameworks';
 import {getLocalConfig} from '../../shared/fleet-config';
 import {reportWebpackWarnings} from '../../shared/webpack-error-utils';
 import report from '../../reporter';
@@ -35,10 +36,7 @@ function getFleetFunctionConfig(pathDir: string) {
   return localConfig;
 }
 
-async function createWebpackConfig(
-  compiledFunctionsDir: string,
-  pathDir: string
-) {
+function getFunctionManifest(compiledFunctionsDir: string, pathDir: string) {
   const localConfig = getFleetFunctionConfig(pathDir);
 
   const manifest = createFunctionManifest(
@@ -48,8 +46,21 @@ async function createWebpackConfig(
   );
 
   store.dispatch({payload: manifest, type: Actions.ADD_MANIFEST});
+  store.dispatch({payload: localConfig, type: Actions.ADD_LOCAL_CONFIG});
 
-  const env = localConfig.env ?? {};
+  return {
+    manifest,
+    localConfig,
+  };
+}
+
+async function createWebpackConfig(
+  compiledFunctionsDir: string,
+  pathDir: string,
+  entries: Record<string, string>,
+  localConfigEnv?: Record<string, string>
+) {
+  const env = localConfigEnv ?? {};
   const nodeEnv = process.env.NODE_ENV || 'development';
 
   const processEnv = Object.keys(env).reduce<Record<string, string>>(
@@ -62,7 +73,7 @@ async function createWebpackConfig(
   );
 
   return {
-    entry: manifest.entries,
+    entry: entries,
     output: {
       path: compiledFunctionsDir,
       filename: '[name].js',
@@ -115,15 +126,19 @@ async function createWebpackConfig(
 }
 
 export async function watch(pathDir: string) {
-  const spinnerStop = report.createSpinner('Compiling Fleet Functions');
+  const hasFramework = await getFrameworks(pathDir);
+
+  const spinnerStop = report.createSpinner(
+    hasFramework ? 'Starting the watcher' : 'Compiling Fleet Functions'
+  );
 
   let isFirstBuild = true;
 
+  const fleetFuntionsCacheDir = path.join('.fleet', 'cache', 'functions');
+
   const compiledFunctionsDir = path.join(
     pathDir,
-    '.fleet',
-    'cache',
-    'functions'
+    hasFramework ?? fleetFuntionsCacheDir
   );
 
   store.dispatch({
@@ -131,11 +146,22 @@ export async function watch(pathDir: string) {
     type: Actions.ADD_COMPILED_DIR,
   });
 
-  await fs.ensureDir(compiledFunctionsDir);
-  await fs.emptyDir(compiledFunctionsDir);
+  if (!hasFramework) {
+    await fs.ensureDir(compiledFunctionsDir);
+    await fs.emptyDir(compiledFunctionsDir);
+  }
 
   try {
-    const config = await createWebpackConfig(compiledFunctionsDir, pathDir);
+    const manifestAndConfig = getFunctionManifest(
+      compiledFunctionsDir,
+      pathDir
+    );
+    const config = await createWebpackConfig(
+      compiledFunctionsDir,
+      pathDir,
+      manifestAndConfig.manifest.entries,
+      manifestAndConfig.localConfig.env
+    );
 
     const compilerCallback = (
       err: Error | undefined,
@@ -185,7 +211,11 @@ export async function watch(pathDir: string) {
       }
     };
 
-    let compiler = webpack(config).watch({}, compilerCallback);
+    let compiler: webpack.Watching;
+
+    if (!hasFramework) {
+      compiler = webpack(config).watch({}, compilerCallback);
+    }
 
     chokidar
       // Watch the Fleet configuration files to see if a function has been
@@ -200,10 +230,21 @@ export async function watch(pathDir: string) {
           )}`
         );
 
+        const manifestAndConfig = getFunctionManifest(
+          compiledFunctionsDir,
+          pathDir
+        );
+
+        if (hasFramework) {
+          return;
+        }
+
         compiler.close(async () => {
           const config = await createWebpackConfig(
             compiledFunctionsDir,
-            pathDir
+            pathDir,
+            manifestAndConfig.manifest.entries,
+            manifestAndConfig.localConfig.env
           );
           compiler = webpack(config).watch({}, compilerCallback);
         });

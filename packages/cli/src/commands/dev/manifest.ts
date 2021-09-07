@@ -44,9 +44,13 @@ export function createFunctionManifest(
       const {dir, name} = path.parse(sourceRelativeFilePath);
 
       const compiledFunctionName = path.join(dir, name + '.js');
-      const compiledFilePath = path.join(
+      const compiledFilePathRelative = path.relative(
         compiledFunctionsDir,
         compiledFunctionName
+      );
+      const compiledFilePath = path.join(
+        compiledFunctionsDir,
+        compiledFilePathRelative
       );
 
       entries[path.join(dir, name)] = sourceFilePath;
