@@ -81,6 +81,9 @@ export function build(
           },
         ],
       },
+      resolveLoader: {
+        modules: [path.resolve(__dirname, '../node_modules'), 'node_modules'],
+      },
       output: {
         filename: '[name].[contenthash].js',
         libraryTarget: 'commonjs2',
