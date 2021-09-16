@@ -32,6 +32,7 @@ const config = {
     'update-notifier',
     'webpack',
     'xdg-app-paths',
+    'babel-loader'
   ],
   output: {
     filename: 'fleet.js',
