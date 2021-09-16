@@ -3,9 +3,9 @@
 	"compilerOptions": {
 		"declaration": false,
 		"outDir": "./dist/",
-		"rootDir": "./src"
+		"resolveJsonModule": true
 	},
 	"include": [
-		"**/*"
+		"src/**/*"
 	]
 }
