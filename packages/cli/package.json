@@ -1,6 +1,6 @@
 {
 	"name": "@fleetfn/cli",
-	"version": "1.0.0-beta.9",
+	"version": "1.0.0-beta.10",
 	"preferGlobal": true,
 	"author": "Fleet FN, Inc",
 	"license": "Apache-2.0",
