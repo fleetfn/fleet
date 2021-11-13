@@ -4,11 +4,7 @@
 
 import type {StatsCompilation} from 'webpack';
 
-// The types is very outdated using webpack 4 and giving conflicts with
-// webpack 5.
-// @ts-ignore
-import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
-
+import {formatWebpackMessages} from './format-webpack-messages';
 import report from '../reporter';
 
 export function reportWebpackWarnings(

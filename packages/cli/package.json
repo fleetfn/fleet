@@ -45,7 +45,6 @@
 		"ora": "^4.0.4",
 		"progress": "^2.0.3",
 		"prompts": "^2.3.0",
-		"react-dev-utils": "^11.0.4",
 		"ts-loader": "^9.2.5",
 		"webpack-merge": "^5.7.3",
 		"write-json-file": "^4.2.1",

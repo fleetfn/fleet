@@ -8,12 +8,8 @@ import ms from 'ms';
 import path from 'path';
 import webpack from 'webpack';
 
-// The types is very outdated using webpack 4 and giving conflicts with
-// webpack 5.
-// @ts-ignore
-import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
-
 import {createFunctionManifest} from './manifest';
+import {formatWebpackMessages} from '../../shared/format-webpack-messages';
 import {getLocalConfig} from '../../shared/fleet-config';
 import {reportWebpackWarnings} from '../../shared/webpack-error-utils';
 import report from '../../reporter';
