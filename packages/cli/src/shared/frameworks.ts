@@ -6,10 +6,10 @@ import path from 'path';
 import fs from 'fs-extra';
 
 const FRAMEWORKS_COMPILED_PATH = {
-  'proton.config.js': '.proton/functions',
+  'triton.config.js': '.triton/functions',
 } as const;
 
-const FRAMEWORKS_CONFIG = ['proton.config.js'] as const;
+const FRAMEWORKS_CONFIG = ['triton.config.js'] as const;
 
 export async function getFrameworks(
   pathDir: string
