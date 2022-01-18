@@ -42,7 +42,7 @@ export class Deployment extends FleetResource {
   create(payload: Environment): Promise<CreateDeploymentResult> {
     return this.createMethod({
       object: 'create',
-      path: 'create',
+      path: '',
       payload,
     });
   }
