@@ -31,7 +31,19 @@ const getQuery = (req: IncomingMessage) => {
   const query: Record<string, string> = {};
 
   for (const [key, value] of url.searchParams) {
-    query[key] = value;
+    let decodedValue = decodeURI(value);
+
+    try {
+      if (
+        (decodedValue.includes('[') && decodedValue.includes(']')) ||
+        (decodedValue.includes('{') && decodedValue.includes('}'))
+      ) {
+        decodedValue = JSON.parse(decodedValue);
+      }
+      // eslint-disable-next-line no-empty
+    } catch (_) {}
+
+    query[key] = decodedValue;
   }
 
   return query;
