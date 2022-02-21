@@ -17,7 +17,6 @@ type Metadata = {
 };
 
 type EnvironmentProps = {
-  env?: Record<string, string>;
   metadata: Metadata;
   project_id: string;
   regions: Array<string>;
@@ -26,7 +25,6 @@ type EnvironmentProps = {
 };
 
 export class Environment extends Action<unknown> {
-  env?: Record<string, string>;
   files: Array<any>;
   functions: Array<Workfunc>;
   metadata: Metadata;
@@ -35,7 +33,6 @@ export class Environment extends Action<unknown> {
   stage: Stage;
 
   constructor({
-    env,
     functions,
     metadata,
     project_id,
@@ -46,7 +43,6 @@ export class Environment extends Action<unknown> {
 
     this.files = [];
     this.metadata = metadata;
-    this.env = env;
     this.project_id = project_id;
     this.regions = regions;
     this.functions = functions;
@@ -54,7 +50,7 @@ export class Environment extends Action<unknown> {
   }
 
   create() {
-    const {env, metadata, project_id, regions, functions} = this;
+    const {metadata, project_id, regions, functions} = this;
 
     return {
       // Normalizes the handler extensions, once the build is done locally
@@ -74,7 +70,6 @@ export class Environment extends Action<unknown> {
           metadata,
         };
       }),
-      env,
       metadata,
       project_id,
       regions,

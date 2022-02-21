@@ -133,7 +133,7 @@ export default async function deploy(isVerbose: string, isProd: string) {
       const buildTime = stamp();
       report.log('Build started...');
 
-      bundle = await build(path, entryFiles, isVerbose);
+      bundle = await build(path, entryFiles, isVerbose, localConfig.env);
 
       if (bundle.errors.length > 0) {
         bundle.errors.forEach(({message}) => report.error(message));
@@ -168,7 +168,6 @@ export default async function deploy(isVerbose: string, isProd: string) {
         metadata: {
           git_commit_latest: commit_head,
         },
-        env: localConfig.env,
         project_id: link.projectId,
         regions: localConfig.regions,
         functions: localConfig.functions.map(({http, name, ...data}) => ({
@@ -212,6 +211,7 @@ export default async function deploy(isVerbose: string, isProd: string) {
       if (failedDeployments.length > 0) {
         try {
           await fleet.deployment.commit(environment);
+          // eslint-disable-next-line no-empty
         } catch (_) {}
 
         progress.fail(`Project ${name} failed to deploy ${deployTime()}\n`);
