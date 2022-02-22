@@ -8,9 +8,9 @@ import prompts from 'prompts';
 import simpleGit from 'simple-git/promise';
 
 import {build} from './build';
-import {getFrameworks} from '../../shared/frameworks';
+import {getFramework} from '../../shared/frameworks';
 import {getLinkedProject, linkFolderToProject} from './link';
-import {getLocalConfig} from '../../shared/fleet-config';
+import {getLocalConfig, FleetConfig} from '../../shared/fleet-config';
 import {readAuthConfigFile} from '../../shared/config';
 import humanizePath from '../../shared/humanize-path';
 import report from '../../reporter';
@@ -40,7 +40,17 @@ enum Stage {
 export default async function deploy(isVerbose: string, isProd: string) {
   const path = process.cwd();
   const git = simpleGit();
-  const localConfig = getLocalConfig(path);
+
+  let localConfig = getLocalConfig(path);
+
+  const manifest = await getFramework(path);
+
+  if (manifest) {
+    localConfig = {
+      ...(localConfig ?? {}),
+      functions: manifest.functions,
+    } as FleetConfig;
+  }
 
   if (!localConfig) {
     report.warn(
@@ -121,11 +131,9 @@ export default async function deploy(isVerbose: string, isProd: string) {
       await linkFolderToProject(path, link, project.value.name);
     }
 
-    const hasFramework = await getFrameworks(path);
-
     let bundle: Bundle | undefined;
 
-    if (!hasFramework) {
+    if (!manifest) {
       const entryFiles = localConfig.functions.map((func: any) =>
         func.handler.startsWith('./') ? func.handler : `./${func.handler}`
       );

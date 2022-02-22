@@ -10,7 +10,7 @@ import webpack from 'webpack';
 
 import {createFunctionManifest} from './manifest';
 import {formatWebpackMessages} from '../../shared/format-webpack-messages';
-import {getFrameworks} from '../../shared/frameworks';
+import {getFramework} from '../../shared/frameworks';
 import {getLocalConfig} from '../../shared/fleet-config';
 import {reportWebpackWarnings} from '../../shared/webpack-error-utils';
 import report from '../../reporter';
@@ -126,10 +126,10 @@ async function createWebpackConfig(
 }
 
 export async function watch(pathDir: string) {
-  const hasFramework = await getFrameworks(pathDir);
+  const frameworkManifest = await getFramework(pathDir);
 
   const spinnerStop = report.createSpinner(
-    hasFramework ? 'Starting the watcher' : 'Compiling Fleet Functions'
+    frameworkManifest ? 'Starting the watcher' : 'Compiling Fleet Functions'
   );
 
   let isFirstBuild = true;
@@ -138,7 +138,7 @@ export async function watch(pathDir: string) {
 
   const compiledFunctionsDir = path.join(
     pathDir,
-    hasFramework ?? fleetFuntionsCacheDir
+    frameworkManifest?.compiledFunctionsDir ?? fleetFuntionsCacheDir
   );
 
   store.dispatch({
@@ -146,7 +146,7 @@ export async function watch(pathDir: string) {
     type: Actions.ADD_COMPILED_DIR,
   });
 
-  if (!hasFramework) {
+  if (!frameworkManifest) {
     await fs.ensureDir(compiledFunctionsDir);
     await fs.emptyDir(compiledFunctionsDir);
   }
@@ -213,7 +213,7 @@ export async function watch(pathDir: string) {
 
     let compiler: webpack.Watching;
 
-    if (!hasFramework) {
+    if (!frameworkManifest) {
       compiler = webpack(config).watch({}, compilerCallback);
     }
 
@@ -235,7 +235,7 @@ export async function watch(pathDir: string) {
           pathDir
         );
 
-        if (hasFramework) {
+        if (frameworkManifest) {
           return;
         }
 
