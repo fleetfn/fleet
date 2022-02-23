@@ -10,14 +10,21 @@ import webpack from 'webpack';
 
 import {createFunctionManifest} from './manifest';
 import {formatWebpackMessages} from '../../shared/format-webpack-messages';
-import {getFramework} from '../../shared/frameworks';
-import {getLocalConfig} from '../../shared/fleet-config';
+import {getFramework, Manifest} from '../../shared/frameworks';
+import {getLocalConfig, FleetConfig} from '../../shared/fleet-config';
 import {reportWebpackWarnings} from '../../shared/webpack-error-utils';
 import report from '../../reporter';
 import store, {Actions} from './store';
 
-function getFleetFunctionConfig(pathDir: string) {
-  const localConfig = getLocalConfig(pathDir);
+function getFleetFunctionConfig(pathDir: string, frameworkManifest?: Manifest) {
+  let localConfig = getLocalConfig(pathDir);
+
+  if (frameworkManifest) {
+    localConfig = {
+      ...(localConfig ?? {}),
+      functions: frameworkManifest.functions,
+    } as FleetConfig;
+  }
 
   if (!localConfig) {
     return report.panic(
@@ -36,8 +43,12 @@ function getFleetFunctionConfig(pathDir: string) {
   return localConfig;
 }
 
-function getFunctionManifest(compiledFunctionsDir: string, pathDir: string) {
-  const localConfig = getFleetFunctionConfig(pathDir);
+function getFunctionManifest(
+  compiledFunctionsDir: string,
+  pathDir: string,
+  frameworkManifest?: Manifest
+) {
+  const localConfig = getFleetFunctionConfig(pathDir, frameworkManifest);
 
   const manifest = createFunctionManifest(
     pathDir,
@@ -58,9 +69,8 @@ async function createWebpackConfig(
   compiledFunctionsDir: string,
   pathDir: string,
   entries: Record<string, string>,
-  localConfigEnv?: Record<string, string>
+  env: Record<string, string> = {}
 ) {
-  const env = localConfigEnv ?? {};
   const nodeEnv = process.env.NODE_ENV || 'development';
 
   const processEnv = Object.keys(env).reduce<Record<string, string>>(
@@ -154,7 +164,8 @@ export async function watch(pathDir: string) {
   try {
     const manifestAndConfig = getFunctionManifest(
       compiledFunctionsDir,
-      pathDir
+      pathDir,
+      frameworkManifest
     );
     const config = await createWebpackConfig(
       compiledFunctionsDir,
@@ -232,7 +243,8 @@ export async function watch(pathDir: string) {
 
         const manifestAndConfig = getFunctionManifest(
           compiledFunctionsDir,
-          pathDir
+          pathDir,
+          frameworkManifest
         );
 
         if (frameworkManifest) {

@@ -15,7 +15,7 @@ const FRAMEWORKS_COMPILED_PATH = {
 
 const FRAMEWORKS_CONFIG = ['triton.config.js'] as const;
 
-type Manifest = {
+export type Manifest = {
   compiledFunctionsDir: string;
   functions: Array<Workfunc>;
 };
@@ -29,10 +29,24 @@ export async function getFramework(
     ).map((config) => FRAMEWORKS_COMPILED_PATH[config])
   );
 
-  let manifest;
-
   try {
-    manifest = loadJSON.sync(manifestPath);
+    const manifest: any = loadJSON.sync(manifestPath);
+
+    if (manifest.functions) {
+      manifest.functions = Object.keys(manifest.functions).reduce<
+        Array<Workfunc>
+      >((prev, key) => {
+        return [
+          ...prev,
+          {
+            name: key,
+            ...manifest.functions[key],
+          },
+        ];
+      }, []);
+    }
+
+    return manifest;
   } catch (err: any) {
     if (err.name === 'JSONError') {
       report.panic(err.message);
@@ -41,6 +55,4 @@ export async function getFramework(
       report.panic(`Failed to read the \`fleet.json\` file ${code}`);
     }
   }
-
-  return manifest as Manifest;
 }
