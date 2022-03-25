@@ -43,7 +43,7 @@ export default async function deploy(isVerbose: string, isProd: string) {
 
   let localConfig = getLocalConfig(path);
 
-  const manifest = await getFramework(path);
+  const manifest = getFramework(path);
 
   if (manifest) {
     localConfig = {

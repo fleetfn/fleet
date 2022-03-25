@@ -2,9 +2,9 @@
  * Copyright (c) 2021-present Fleet FN, Inc. All rights reserved.
  */
 
-import path from 'path';
-import fs from 'fs-extra';
+import fs, {constants} from 'fs';
 import loadJSON from 'load-json-file';
+import path from 'path';
 
 import report from '../reporter';
 import type {Workfunc} from './fleet-config';
@@ -20,17 +20,26 @@ export type Manifest = {
   functions: Array<Workfunc>;
 };
 
-export async function getFramework(
-  pathDir: string
-): Promise<Manifest | undefined> {
-  const [manifestPath] = await Promise.all(
-    FRAMEWORKS_CONFIG.filter(
-      async (config) => await fs.ensureFile(path.join(pathDir, config))
-    ).map((config) => FRAMEWORKS_COMPILED_PATH[config])
-  );
+export function getFramework(pathDir: string): Manifest | undefined {
+  const [manifestPath] = FRAMEWORKS_CONFIG.filter((config) => {
+    try {
+      fs.accessSync(
+        path.join(pathDir, config),
+        constants.R_OK | constants.W_OK
+      );
+
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }).map((config) => FRAMEWORKS_COMPILED_PATH[config]);
+
+  if (!manifestPath) {
+    return;
+  }
 
   try {
-    const manifest: any = loadJSON.sync(manifestPath);
+    const manifest: any = loadJSON.sync(path.join(pathDir, manifestPath));
 
     if (manifest.functions) {
       manifest.functions = Object.keys(manifest.functions).reduce<
@@ -52,7 +61,7 @@ export async function getFramework(
       report.panic(err.message);
     } else {
       const code = err.code ? `(${err.code})` : '';
-      report.panic(`Failed to read the \`fleet.json\` file ${code}`);
+      report.panic(`Failed to read the \`${manifestPath}\` file ${code}`);
     }
   }
 }
