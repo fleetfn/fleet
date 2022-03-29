@@ -7,23 +7,66 @@ import type {Stage} from '../types';
 import type {Environment} from '../objects/Environment';
 
 type WorkloadResult = {
-  filename: string;
   id: string;
+  object: 'function';
   name: string;
+  ready_state: string;
+  metadata: {
+    asynchronous: number;
+    filename: string;
+    sha: string;
+    size: number;
+    timeout: number;
+  };
+  http: {
+    method: Array<string>;
+    path: string;
+  };
+  created: string;
+  updated: string;
+};
+
+type Collection<T> = {
+  data: Array<T>;
+  object: 'list';
 };
 
 type CreateDeploymentResult = {
   id: string;
   uid: string;
   object: 'deployment';
-  owner_id: string;
-  regions: Array<string>;
+  creator: {
+    id: string;
+    type: 'User';
+    object: 'user';
+    email: string;
+    name: string;
+    created: string;
+    updated: string;
+  };
+  stage: 'PREVIEW' | 'PRODUCTION';
   ready_state: string;
-  url: string;
-  last_deployment_deleted: boolean;
-  functions: Array<WorkloadResult>;
-  created: Date;
-  updated: Date;
+  regions: Array<string>;
+  domain: {
+    id: string;
+    object: 'domain';
+    name: string;
+    primary: boolean;
+    created: string;
+    updated: string;
+  };
+  project: {
+    id: string;
+    object: 'project';
+    name: string;
+    user_id: string;
+    subdomain: string;
+    created: string;
+    updated: string;
+  };
+  functions: Collection<WorkloadResult>;
+  created: string;
+  updated: string;
 };
 
 type CommitDeploymentResult = {

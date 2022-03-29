@@ -194,16 +194,18 @@ export default async function deploy(isVerbose: string, isProd: string) {
 
       const progress = report.progress('Creating deployment');
 
-      const {url, functions} = await fleet.deployment.create(environment);
+      const {domain, functions} = await fleet.deployment.create(environment);
 
-      functions.forEach(({id, filename}) => {
-        const path = bundle?.functions[filename] ?? filename;
+      functions.data.forEach(({id, name, metadata}) => {
+        const path = bundle?.functions[metadata.filename] ?? metadata.filename;
 
         if (isVerbose) {
-          report.debug(`Deploying the ${filename} function of path ${path}`);
+          report.debug(`Deploying the ${name} function of path ${path}`);
         }
 
-        environment.files.push(new File({path, handler: filename, id}));
+        environment.files.push(
+          new File({path, handler: metadata.filename, id})
+        );
       });
 
       progress.text = 'Uploading deployments artifacts';
@@ -238,7 +240,7 @@ export default async function deploy(isVerbose: string, isProd: string) {
         report.log(`\n${report.format.gray('functions:')}`);
         report.log(`   ${files.length} deployed`);
         report.log(`${report.format.gray('deployment endpoint:')}`);
-        report.log(`   https://${url}`);
+        report.log(`   https://${domain.name}`);
 
         report.log(
           `\n${report.format.gray('Ready! Deployed')} ${report.format.hex(
