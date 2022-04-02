@@ -17,7 +17,7 @@ type Metadata = {
 };
 
 type EnvironmentProps = {
-  metadata: Metadata;
+  metadata?: Metadata;
   project_id: string;
   regions: Array<string>;
   stage: Stage;
@@ -27,7 +27,7 @@ type EnvironmentProps = {
 export class Environment extends Action<unknown> {
   files: Array<any>;
   functions: Array<Workfunc>;
-  metadata: Metadata;
+  metadata?: Metadata;
   project_id: string;
   regions: Array<string>;
   stage: Stage;

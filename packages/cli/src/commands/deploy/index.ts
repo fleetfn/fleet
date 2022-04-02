@@ -173,9 +173,11 @@ export default async function deploy(isVerbose: string, isProd: string) {
       );
 
       const environment = new Environment({
-        metadata: {
-          git_commit_latest: commit_head,
-        },
+        metadata: commit_head
+          ? {
+              git_commit_latest: commit_head,
+            }
+          : undefined,
         project_id: link.projectId,
         regions: localConfig.regions,
         functions: localConfig.functions.map(({http, name, ...data}) => ({
@@ -185,7 +187,7 @@ export default async function deploy(isVerbose: string, isProd: string) {
             asynchronous: data.asynchronousThreshold,
             filename: data.handler,
             sha: 'test',
-            size: 0,
+            size: 1,
             timeout: data.timeout,
           },
         })),
