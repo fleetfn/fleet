@@ -80,7 +80,6 @@ class Reporter {
       color: 'gray',
       text,
     });
-    spinner.start();
 
     return spinner;
   };

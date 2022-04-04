@@ -131,28 +131,9 @@ export default async function deploy(isVerbose: string, isProd: string) {
       await linkFolderToProject(path, link, project.value.name);
     }
 
-    let bundle: Bundle | undefined;
+    const buildProgress = report.progress('Build started');
 
-    if (!manifest) {
-      const entryFiles = localConfig.functions.map((func: any) =>
-        func.handler.startsWith('./') ? func.handler : `./${func.handler}`
-      );
-
-      const buildTime = stamp();
-      report.log('Build started...');
-
-      bundle = await build(path, entryFiles, isVerbose, localConfig.env);
-
-      if (bundle.errors.length > 0) {
-        bundle.errors.forEach(({message}) => report.error(message));
-
-        return report.panic('Exiting with error on compilation.');
-      }
-
-      report.log(`Build finished ${chalk.gray.bold(buildTime())}`);
-    }
-
-    const deployTime = stamp();
+    const deploymentProgress = report.progress('Creating deployment');
 
     try {
       let commit_head;
@@ -171,6 +152,30 @@ export default async function deploy(isVerbose: string, isProd: string) {
           humanizePath(path)
         )} to the project ${chalk.bold(name)}\n`
       );
+
+      let bundle: Bundle | undefined;
+
+      if (!manifest) {
+        const entryFiles = localConfig.functions.map((func: any) =>
+          func.handler.startsWith('./') ? func.handler : `./${func.handler}`
+        );
+
+        const buildTime = stamp();
+        buildProgress.start();
+
+        bundle = await build(path, entryFiles, isVerbose, localConfig.env);
+
+        if (bundle.errors.length > 0) {
+          bundle.errors.forEach(({message}) => report.error(message));
+
+          buildProgress.fail('Build failed');
+          return report.panic('Exiting with error on compilation.');
+        }
+
+        buildProgress.succeed(`Build finished ${buildTime()}`);
+      }
+
+      const deployTime = stamp();
 
       const environment = new Environment({
         metadata: commit_head
@@ -194,7 +199,7 @@ export default async function deploy(isVerbose: string, isProd: string) {
         stage: isProd ? Stage.PRODUCTION : Stage.PREVIEW,
       });
 
-      const progress = report.progress('Creating deployment');
+      deploymentProgress.start();
 
       const {domain, functions} = await fleet.deployment.create(environment);
 
@@ -210,7 +215,7 @@ export default async function deploy(isVerbose: string, isProd: string) {
         );
       });
 
-      progress.text = 'Uploading deployments artifacts';
+      deploymentProgress.text = 'Uploading deployments artifacts';
 
       const files = await fleet.deployment.deploy(environment);
 
@@ -226,7 +231,9 @@ export default async function deploy(isVerbose: string, isProd: string) {
           // eslint-disable-next-line no-empty
         } catch (_) {}
 
-        progress.fail(`Project ${name} failed to deploy ${deployTime()}\n`);
+        deploymentProgress.fail(
+          `Project ${name} failed to deploy ${deployTime()}\n`
+        );
         report.log(report.format.red('Error:'));
         report.log(
           `Unable to deploy ${chalk.bold(
@@ -237,7 +244,7 @@ export default async function deploy(isVerbose: string, isProd: string) {
       } else {
         const commit = await fleet.deployment.commit(environment);
 
-        progress.succeed(`Service deployed ${deployTime()}`);
+        deploymentProgress.succeed(`Service deployed ${deployTime()}`);
 
         report.log(`\n${report.format.gray('functions:')}`);
         report.log(`   ${files.length} deployed`);
@@ -251,6 +258,14 @@ export default async function deploy(isVerbose: string, isProd: string) {
         );
       }
     } catch (err) {
+      if (buildProgress.isSpinning) {
+        buildProgress.fail((err as Error).message);
+      }
+
+      if (deploymentProgress.isSpinning) {
+        deploymentProgress.fail((err as Error).message);
+      }
+
       report.panic(err as Error);
     }
   }
