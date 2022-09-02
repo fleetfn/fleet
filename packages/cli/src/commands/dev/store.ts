@@ -3,10 +3,12 @@
  */
 
 import type {Manifest} from './manifest';
+import type {FleetConfig} from '../../shared/fleet-config';
 
 export enum Actions {
   ADD_MANIFEST = 0,
   ADD_COMPILED_DIR = 1,
+  ADD_LOCAL_CONFIG = 2,
 }
 
 export interface ActionAddManifest extends Action {
@@ -21,6 +23,7 @@ interface Action {
 
 type Store = {
   compiledFunctionsDir: string;
+  localConfig: FleetConfig;
   manifest: Manifest;
 };
 
@@ -37,6 +40,11 @@ const reducer = <S extends Action>(state: Store, action: S) => {
       return {
         ...state,
         compiledFunctionsDir: action.payload,
+      };
+    case Actions.ADD_LOCAL_CONFIG:
+      return {
+        ...state,
+        localConfig: action.payload,
       };
     default:
       return state;

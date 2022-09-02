@@ -5,6 +5,7 @@
 import ansiEscapes from 'ansi-escapes';
 import chalk from 'chalk';
 import ora, {Ora} from 'ora';
+import SDK from '@fleetfn/sdk';
 
 import {getErrorFormatter} from './errors';
 
@@ -13,14 +14,24 @@ const errorFormatter = getErrorFormatter();
 class Reporter {
   format = chalk;
 
-  panic = (error: Error | string) => {
+  panic = (error: SDK.APIError | Error | string) => {
     this.error(error);
     return process.exit(1);
   };
 
-  error = (error: Error | string) => {
+  error = (error: SDK.APIError | Error | string) => {
     if (error instanceof Error) {
       this.log(errorFormatter.render(error));
+    } else if (
+      (error as SDK.APIError).code &&
+      (error as SDK.APIError).message &&
+      (error as SDK.APIError).type
+    ) {
+      this.log(
+        `${this.format.bold((error as SDK.APIError).type)} ${
+          (error as SDK.APIError).message
+        }`
+      );
     } else {
       this.log(`${this.format.red.bold('Error!')} ${error}`);
     }
@@ -52,11 +63,7 @@ class Reporter {
     }
   };
 
-  log = (text: string, span: boolean = true) => {
-    if (span) {
-      text = `${this.format.grey('>')} ${text}`;
-    }
-
+  log = (text: string) => {
     process.stderr.write(`${text}\n`);
   };
 
@@ -66,6 +73,15 @@ class Reporter {
         `[${new Date().toISOString()}]`
       )} ${text}`
     );
+  };
+
+  progress = (text: string) => {
+    const spinner: Ora = ora({
+      color: 'gray',
+      text,
+    });
+
+    return spinner;
   };
 
   createSpinner = (text: string) => {

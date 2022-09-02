@@ -38,6 +38,7 @@ export default async function fetch({
     method,
     headers: {
       ...headers,
+      'User-Agent': 'Fleet SDK/v1.0.0-alpha.3',
       Authorization: `Bearer ${token}`,
     },
   };
@@ -50,14 +51,17 @@ export default async function fetch({
 
   return nFetch(apiUrl, options)
     .then((res) => {
-      if (res.ok) {
-        return res;
+      if (res.headers.get('content-type')?.includes('application/json')) {
+        return res.json();
       }
 
-      return Promise.reject(
-        new Error(`Failed to fetch ${res.url}: ${res.status} ${res.statusText}`)
-      );
+      return res.text();
     })
-    .then((res) => res.json())
-    .catch((err) => error(err));
+    .then((res) => {
+      if (res.code) {
+        throw res;
+      }
+
+      return res;
+    });
 }

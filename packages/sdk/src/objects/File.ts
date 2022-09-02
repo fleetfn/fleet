@@ -25,8 +25,6 @@ export class File extends Action<ReadStream> {
   }
 
   get params() {
-    const {handler, id} = this;
-
-    return `?handler=${handler}&functionId=${id}`;
+    return `/${this.id}`;
   }
 }

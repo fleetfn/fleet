@@ -2,22 +2,22 @@
  * Copyright (c) 2021-present Fleet FN, Inc. All rights reserved.
  */
 
-import {Fleet, Objects} from '@fleetfn/sdk';
+import {Fleet, Objects, APIError} from '@fleetfn/sdk';
 import chalk from 'chalk';
 import prompts from 'prompts';
 import simpleGit from 'simple-git/promise';
 
 import {build} from './build';
+import {getFramework} from '../../shared/frameworks';
 import {getLinkedProject, linkFolderToProject} from './link';
-import {getLocalConfig} from '../../shared/fleet-config';
+import {getLocalConfig, FleetConfig} from '../../shared/fleet-config';
 import {readAuthConfigFile} from '../../shared/config';
 import humanizePath from '../../shared/humanize-path';
 import report from '../../reporter';
 import stamp from '../../shared/stamp';
+import type {Bundle} from './build';
 
 const {Environment, File} = Objects;
-
-const READY = 'READY';
 
 const transformGitHead = (log: any) => {
   if (!log) {
@@ -32,10 +32,25 @@ const transformGitHead = (log: any) => {
   };
 };
 
+enum Stage {
+  PRODUCTION = 'PRODUCTION',
+  PREVIEW = 'PREVIEW',
+}
+
 export default async function deploy(isVerbose: string, isProd: string) {
   const path = process.cwd();
   const git = simpleGit();
-  const localConfig = getLocalConfig(path);
+
+  let localConfig = getLocalConfig(path);
+
+  const manifest = getFramework(path);
+
+  if (manifest) {
+    localConfig = {
+      ...(localConfig ?? {}),
+      functions: manifest.functions,
+    } as FleetConfig;
+  }
 
   if (!localConfig) {
     report.warn(
@@ -91,13 +106,13 @@ export default async function deploy(isVerbose: string, isProd: string) {
         return report.panic('Aborted. The project has not been configured.');
       }
 
-      const {projects} = await fleet.project.all();
+      const projects = await fleet.project.all();
 
       const project = await prompts({
         type: 'select',
         name: 'value',
         message: 'Which project do you want to deploy?',
-        choices: projects.map((project: any) => ({
+        choices: projects.data.map((project) => ({
           title: project.name,
           value: {
             id: project.id,
@@ -116,24 +131,9 @@ export default async function deploy(isVerbose: string, isProd: string) {
       await linkFolderToProject(path, link, project.value.name);
     }
 
-    const entryFiles = localConfig.functions.map((func: any) =>
-      func.handler.startsWith('./') ? func.handler : `./${func.handler}`
-    );
+    const buildProgress = report.progress('Build started');
 
-    const buildTime = stamp();
-    report.log('Build started...');
-
-    const bundle = await build(path, entryFiles, isVerbose);
-
-    if (bundle.errors.length > 0) {
-      bundle.errors.forEach(({message}) => report.error(message));
-
-      return report.panic('Exiting with error on compilation.');
-    }
-
-    report.log(`Build finished ${chalk.gray.bold(buildTime())}`);
-
-    const deployTime = stamp();
+    const deploymentProgress = report.progress('Creating deployment');
 
     try {
       let commit_head;
@@ -145,78 +145,127 @@ export default async function deploy(isVerbose: string, isProd: string) {
         // Hide the error assuming the repository has no git
       }
 
-      const environment = new Environment({
-        commit_head,
-        environment_variables: localConfig.env,
-        project_id: link.projectId,
-        regions: localConfig.regions,
-        resources: localConfig.functions,
-        stage: isProd ? 'prod' : 'dev',
-      });
-
-      const {
-        domain,
-        error: errorMessage,
-        functionDomain,
-        functions,
-        message,
-        name,
-      } = await fleet.deployment.create(environment);
+      const {name} = await fleet.project.project(link.projectId);
 
       report.log(
         `Deploying ${chalk.bold(
           humanizePath(path)
-        )} to the project ${chalk.bold(name)}`
+        )} to the project ${chalk.bold(name)}\n`
       );
 
-      if (errorMessage) {
-        throw message ? message : errorMessage;
-      }
+      let bundle: Bundle | undefined;
 
-      report.log(`${chalk.cyan.bold(`https://${functionDomain}`)}`);
+      if (!manifest) {
+        const entryFiles = localConfig.functions.map((func: any) =>
+          func.handler.startsWith('./') ? func.handler : `./${func.handler}`
+        );
 
-      functions.forEach(({_id, handler}: any) => {
-        const path = bundle.functions[handler];
+        const buildTime = stamp();
+        buildProgress.start();
 
-        if (isVerbose) {
-          report.debug(`Deploying the ${handler} function of path ${path}`);
+        bundle = await build(path, entryFiles, isVerbose, localConfig.env);
+
+        if (bundle.errors.length > 0) {
+          bundle.errors.forEach(({message}) => report.error(message));
+
+          buildProgress.fail('Build failed');
+          return report.panic('Exiting with error on compilation.');
         }
 
-        environment.files.push(new File({path, handler, id: _id}));
+        buildProgress.succeed(`Build finished ${buildTime()}`);
+      }
+
+      const deployTime = stamp();
+
+      const environment = new Environment({
+        metadata: commit_head
+          ? {
+              git_commit_latest: commit_head,
+            }
+          : undefined,
+        project_id: link.projectId,
+        regions: localConfig.regions,
+        functions: localConfig.functions.map(({http, name, ...data}) => ({
+          http,
+          name,
+          metadata: {
+            asynchronous: data.asynchronousThreshold,
+            filename: data.handler,
+            sha: 'test',
+            size: 1,
+            timeout: data.timeout,
+          },
+        })),
+        stage: isProd ? Stage.PRODUCTION : Stage.PREVIEW,
       });
 
-      const deployments = await fleet.deployment.deploy(environment);
+      deploymentProgress.start();
 
-      const failedDeployments = deployments.filter(
-        (deploy: any) => deploy.code !== READY
+      const {domain, functions} = await fleet.deployment.create(environment);
+
+      functions.data.forEach(({id, name, metadata}) => {
+        const path = bundle?.functions[metadata.filename] ?? metadata.filename;
+
+        if (isVerbose) {
+          report.debug(`Deploying the ${name} function of path ${path}`);
+        }
+
+        environment.files.push(
+          new File({path, handler: metadata.filename, id})
+        );
+      });
+
+      deploymentProgress.text = 'Uploading deployments artifacts';
+
+      const files = await fleet.deployment.deploy(environment);
+
+      const failedDeployments = files.filter(
+        (data) => typeof data === 'object'
       );
 
       // Checks if any deployment has initialized or error, if it is positive,
       // avoid giving a validate and the deployment must be created again.
       if (failedDeployments.length > 0) {
-        report.panic(
-          `Fail! Unable to deploy ${chalk.bold(
-            failedDeployments.length
-          )} functions. Try again! ${chalk.gray.bold(deployTime())}`
-        );
-      } else {
-        const {deployPoint} = await fleet.deployment.commit(environment);
+        try {
+          await fleet.deployment.commit(environment);
+          // eslint-disable-next-line no-empty
+        } catch (_) {}
 
-        if (deployPoint && isProd) {
-          report.log(
-            `${chalk.gray('Ready! Deployed')} ${chalk.cyan.bold(
-              `https://${domain}`
-            )} ${chalk.gray.bold(deployTime())}`
-          );
-        } else {
-          report.log(
-            `${chalk.gray('Ready! Deployed')} ${chalk.cyan.bold(
-              `https://${functionDomain}`
-            )} ${chalk.gray.bold(deployTime())}`
-          );
-        }
+        deploymentProgress.fail(
+          `Project ${name} failed to deploy ${deployTime()}\n`
+        );
+        report.log(report.format.red('Error:'));
+        report.log(
+          `Unable to deploy ${chalk.bold(
+            String(failedDeployments.length)
+          )} functions.`
+        );
+        report.panic(failedDeployments[0] as unknown as APIError);
+      } else {
+        const commit = await fleet.deployment.commit(environment);
+
+        deploymentProgress.succeed(`Service deployed ${deployTime()}`);
+
+        report.log(`\n${report.format.gray('functions:')}`);
+        report.log(`   ${files.length} deployed`);
+        report.log(`${report.format.gray('deployment endpoint:')}`);
+        report.log(`   https://${domain.name}`);
+
+        report.log(
+          `\n${report.format.gray('Ready! Deployed')} ${report.format.hex(
+            '#0678FE'
+          )(`https://${commit.url}`)}`
+        );
       }
     } catch (err) {
+      if (buildProgress.isSpinning) {
+        buildProgress.fail((err as Error).message);
+      }
+
+      if (deploymentProgress.isSpinning) {
+        deploymentProgress.fail((err as Error).message);
+      }
+
       report.panic(err as Error);
     }
   }

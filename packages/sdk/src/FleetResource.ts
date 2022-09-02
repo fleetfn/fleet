@@ -41,17 +41,23 @@ export class FleetResource {
 
     if (Array.isArray(body)) {
       return Promise.all(
-        body.map((action) =>
-          this.client(
-            `${this.path}/${path}${action.params}`,
-            action.data,
-            options
-          )
-        )
+        body.map(async (action) => {
+          try {
+            return await this.client(
+              `${this.path}/${path}${action.params}`,
+              action.data,
+              options
+            );
+          } catch (error) {
+            return error;
+          }
+        })
       );
     } else {
+      const url = path ? `${this.path}/${path}` : this.path;
+
       return this.client(
-        `${this.path}/${path}${this.getVariables(variables)}`,
+        `${url}${this.getVariables(variables)}`,
         body,
         options
       ).then((res) => {

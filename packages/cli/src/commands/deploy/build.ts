@@ -9,7 +9,7 @@ import webpack from 'webpack';
 
 import report from '../../reporter';
 
-type Bundle = {
+export type Bundle = {
   functions: Record<string, string>;
   errors: Array<Record<string, string>>;
 };
@@ -21,7 +21,8 @@ function filterByExtension(ext: string) {
 export function build(
   pathDir: string,
   entryFiles: Array<string> = [],
-  debug: string
+  debug: string,
+  env: Record<string, string> = {}
 ) {
   return new Promise<Bundle>(async (resolve, reject) => {
     const entryFilesWithName: Record<string, string> = {};
@@ -90,6 +91,17 @@ export function build(
           'node_modules',
         ],
       },
+      plugins: [
+        new webpack.DefinePlugin({
+          ...Object.keys(env).reduce<Record<string, string>>(
+            (prev, key) => ({
+              ...prev,
+              [`process.env.${key}`]: JSON.stringify(env[key]),
+            }),
+            {}
+          ),
+        }),
+      ],
       output: {
         filename: '[name].[contenthash].js',
         libraryTarget: 'commonjs2',

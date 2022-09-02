@@ -240,7 +240,7 @@ export const response = (res: ServerResponse) => {
       code = state.hasStatusCode ? state.statusCode : 302;
     }
 
-    setHeader('location', url).code(code).send();
+    setHeader('location', url).code(code).send('');
   };
 
   const self = {

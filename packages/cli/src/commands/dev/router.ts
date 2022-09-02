@@ -89,7 +89,7 @@ export function createDevRouter() {
 
         const execute = (fn && fn.default) || fn;
 
-        await Promise.resolve(execute(await request(req), response(res)));
+        await execute(await request(req), response(res));
       } catch (error) {
         if ((error as Error).message.includes('execute is not a function')) {
           (
